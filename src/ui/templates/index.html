@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 智能客服系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="/static/vendor/marked.min.js"></script>
+</head>
+<body data-merchant-id="{{ merchant.id if merchant else '' }}">
+    <div class="shell">
+        <header class="topbar">
+            <a class="brand" href="/">
+                <span class="brand-mark">AI</span>
+                <span>
+                    <strong>EdgeDesk</strong>
+                    <small>本地边缘 AI 客服</small>
+                </span>
+            </a>
+            <div class="top-actions">
+                <div id="board-status" class="board-status offline">🔴 开发板离线</div>
+                <a class="admin-link" href="/admin">商家后台</a>
+            </div>
+        </header>
+
+        {% if not merchant %}
+        <main class="plaza">
+            <section class="plaza-hero">
+                <p class="eyebrow">多商家隔离 · 本地 Ollama · 实时 RAG</p>
+                <h1>选择商家，进入专属 AI 客服</h1>
+                <p>每个商家拥有独立知识库、独立演示上下文和独立 RAG 命中结果，适合比赛现场连续展示。</p>
+            </section>
+            <section class="merchant-grid">
+                {% for item in merchants %}
+                <a class="merchant-card" href="/chat?merchant={{ item.id }}" style="--accent: {{ item.accent }}">
+                    <span class="merchant-glow"></span>
+                    <strong>{{ item.name }}</strong>
+                    <p>{{ item.slogan }}</p>
+                    <small>{{ item.count }} 条知识 · 点击进入</small>
+                </a>
+                {% endfor %}
+            </section>
+        </main>
+        {% else %}
+        <main class="workspace">
+            <aside class="side-panel">
+                <div class="panel-title">商家广场</div>
+                {% for item in merchants %}
+                <a class="merchant-switch {% if item.id == merchant.id %}active{% endif %}" href="/chat?merchant={{ item.id }}" style="--accent: {{ item.accent }}">
+                    <span></span>
+                    <div>
+                        <strong>{{ item.name }}</strong>
+                        <small>{{ item.count }} 条知识</small>
+                    </div>
+                </a>
+                {% endfor %}
+                <button id="reset-demo" class="reset-demo">重置演示</button>
+            </aside>
+
+            <section class="chat-panel">
+                <div class="chat-header">
+                    <div>
+                        <p class="eyebrow">当前商家</p>
+                        <h1>{{ merchant.name }} AI 客服</h1>
+                    </div>
+                    <div class="merchant-pill">{{ merchant.slogan }}</div>
+                </div>
+
+                <div class="chat-container" id="chat-container">
+                    <div class="message bot-message">
+                        <div class="avatar bot-avatar">AI</div>
+                        <div class="message-content">
+                            <div class="message-text markdown-body">
+                                您好，我是 **{{ merchant.name }}** 的本地 AI 客服。可以问我招牌、营业时间、会员、配送等问题。
+                            </div>
+                            <div class="message-time">刚刚</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-container">
+                    <div class="quick-actions">
+                        <button class="quick-btn" data-message="你们招牌是什么？">招牌推荐</button>
+                        <button class="quick-btn" data-message="营业时间是什么？">营业时间</button>
+                        <button class="quick-btn" data-message="可以介绍一下会员服务吗？">会员服务</button>
+                    </div>
+                    <div class="input-wrapper">
+                        <input type="text" id="message-input" placeholder="输入问题，按 Enter 发送">
+                        <button id="send-button" class="send-btn" title="发送">↑</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        {% endif %}
+    </div>
+
+    <script src="/static/js/chat.js"></script>
+</body>
+</html>

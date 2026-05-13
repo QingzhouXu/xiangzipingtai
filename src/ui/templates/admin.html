@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商家后台 · AI 智能客服系统</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="admin-body">
+    <div class="admin-shell">
+        <header class="topbar">
+            <a class="brand" href="/">
+                <span class="brand-mark">AI</span>
+                <span>
+                    <strong>Merchant Console</strong>
+                    <small>知识库与 RAG 演示后台</small>
+                </span>
+            </a>
+            <div class="top-actions">
+                <div id="board-status" class="board-status offline">🔴 开发板离线</div>
+                <a class="admin-link" href="/">用户端</a>
+            </div>
+        </header>
+
+        <div class="admin-toolbar">
+            <label for="merchant-select">当前商家</label>
+            <select id="merchant-select">
+                {% for item in merchants %}
+                <option value="{{ item.id }}">{{ item.name }}</option>
+                {% endfor %}
+            </select>
+            <span id="merchant-summary">正在加载商家数据...</span>
+        </div>
+
+        <main class="admin-grid">
+            <section class="admin-column knowledge-list-panel">
+                <h2>知识列表</h2>
+                <div id="knowledge-list" class="knowledge-list"></div>
+            </section>
+
+            <section class="admin-column editor-panel">
+                <h2>知识编辑区</h2>
+                <label>问题</label>
+                <input id="knowledge-question" type="text" placeholder="例如：你们招牌是什么？">
+                <label>回答</label>
+                <textarea id="knowledge-answer" rows="9" placeholder="填写真实客服回答，保存后立即进入当前商家知识库。"></textarea>
+                <button id="add-knowledge" class="primary-btn">新增知识</button>
+                <p id="editor-tip" class="admin-tip">新增内容会实时写入 data/knowledge_base.json。</p>
+            </section>
+
+            <section class="admin-column rag-panel">
+                <h2>RAG 测试窗口</h2>
+                <input id="rag-question" type="text" value="你们招牌是什么？">
+                <button id="test-rag" class="primary-btn">测试 RAG 命中</button>
+                <div id="rag-result" class="rag-result">等待测试...</div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
