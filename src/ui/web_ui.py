@@ -321,6 +321,8 @@ class WebUI:
         @self.login_required(["merchant", "super_admin"])
         def admin():
             user = self.current_user()
+            if not user:
+                return redirect(url_for("login"))
             if user["role"] == "merchant" and user.get("status") != "approved":
                 application = next((item for item in self.auth.data["applications"] if item["owner_username"] == user["username"]), None)
                 return render_template("pending.html", application=application)
@@ -433,12 +435,16 @@ class WebUI:
                 return jsonify({"error": "消息不存在"}), 404
             
             # 添加管理员回复
+            current_user = self.current_user()
+            if not current_user:
+                return jsonify({"error": "用户未登录"}), 401
+                
             admin_reply = {
                 "id": str(len(messages) + 1),
                 "type": "admin_reply",
                 "message": reply_message,
                 "original_message_id": message_id,
-                "admin_user": self.current_user()["username"],
+                "admin_user": current_user["username"],
                 "timestamp": datetime.datetime.now().isoformat()
             }
             messages.append(admin_reply)

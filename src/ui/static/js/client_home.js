@@ -2,8 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 获取DOM元素
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
-    const filterBtns = document.querySelectorAll('.filter-btn');
+    const filterBtns = document.querySelectorAll('.category-item-dark');
     const shopGrid = document.getElementById('shop-grid');
+    const sidebar = document.querySelector('.category-sidebar');
     
     // 当前筛选状态
     let currentCategory = 'all';
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         if (searchInput) {
+            searchInput.addEventListener('input', handleSearchInput);
             searchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     performSearch();
@@ -49,50 +51,105 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    function handleSearchInput() {
+        const loader = document.getElementById('search-loader');
+        const searchIcon = document.querySelector('.search-icon');
+        
+        if (searchInput.value.trim()) {
+            loader.classList.add('active');
+            if (searchIcon) searchIcon.style.display = 'none';
+        } else {
+            loader.classList.remove('active');
+            if (searchIcon) searchIcon.style.display = 'flex';
+        }
+    }
+    
     function performSearch() {
         currentSearch = searchInput ? searchInput.value.trim() : '';
         filterMerchants();
     }
     
+    var filterTimer = null;
+
     function filterMerchants() {
-        const shopCards = document.querySelectorAll('.shop-card');
-        
-        shopCards.forEach(card => {
-            const merchantName = card.querySelector('h2').textContent.toLowerCase();
-            const merchantCategory = card.querySelector('.shop-meta span').textContent.toLowerCase();
-            const merchantSlogan = card.querySelector('p').textContent.toLowerCase();
-            
-            // 分类筛选
-            const categoryMatch = currentCategory === 'all' || merchantCategory.includes(currentCategory.toLowerCase());
-            
-            // 搜索筛选
-            const searchMatch = !currentSearch || 
+        if (filterTimer) {
+            clearTimeout(filterTimer);
+            filterTimer = null;
+        }
+
+        var shopCards = document.querySelectorAll('.shop-card-horizontal');
+
+        shopCards.forEach(function(card) {
+            card.classList.remove('shop-card-fading', 'shop-card-showing');
+        });
+
+        var hidingCards = [];
+        var showingCards = [];
+
+        shopCards.forEach(function(card) {
+            var merchantName = card.querySelector('h3').textContent.toLowerCase();
+            var merchantCategory = card.querySelector('.category-tag').textContent.toLowerCase();
+            var merchantSlogan = card.querySelector('.slogan').textContent.toLowerCase();
+
+            var categoryMatch = currentCategory === 'all' || merchantCategory.includes(currentCategory.toLowerCase());
+            var searchMatch = !currentSearch ||
                 merchantName.includes(currentSearch.toLowerCase()) ||
                 merchantCategory.includes(currentSearch.toLowerCase()) ||
                 merchantSlogan.includes(currentSearch.toLowerCase());
-            
-            // 显示或隐藏卡片
-            if (categoryMatch && searchMatch) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
+
+            var shouldShow = categoryMatch && searchMatch;
+            var isHidden = card.classList.contains('shop-card-hidden');
+
+            if (shouldShow && isHidden) {
+                showingCards.push(card);
+            } else if (!shouldShow && !isHidden) {
+                hidingCards.push(card);
             }
         });
-        
-        // 检查是否有结果
-        checkNoResults();
+
+        if (hidingCards.length === 0 && showingCards.length === 0) {
+            checkNoResults();
+            return;
+        }
+
+        hidingCards.forEach(function(card) {
+            card.classList.add('shop-card-fading');
+        });
+
+        filterTimer = setTimeout(function() {
+            filterTimer = null;
+
+            hidingCards.forEach(function(card) {
+                card.classList.add('shop-card-hidden');
+                card.classList.remove('shop-card-fading');
+            });
+
+            showingCards.forEach(function(card) {
+                card.classList.remove('shop-card-hidden');
+                card.classList.add('shop-card-showing');
+            });
+
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    showingCards.forEach(function(card) {
+                        card.classList.remove('shop-card-showing');
+                    });
+                    checkNoResults();
+                });
+            });
+        }, 420);
     }
     
     function checkNoResults() {
-        const visibleCards = document.querySelectorAll('.shop-card:not([style*="display: none"])');
-        let noResultsMsg = document.querySelector('.no-results');
+        var visibleCards = document.querySelectorAll('.shop-card-horizontal:not(.shop-card-hidden)');
+        var noResultsMsg = document.querySelector('.no-results');
         
         if (visibleCards.length === 0) {
             if (!noResultsMsg) {
                 noResultsMsg = document.createElement('div');
                 noResultsMsg.className = 'no-results';
                 noResultsMsg.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #666;">
+                    <div style="text-align: center; padding: 40px; color: var(--muted-foreground);">
                         <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
                         <h3>没有找到相关店铺</h3>
                         <p>试试调整搜索关键词或选择其他分类</p>
@@ -108,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleFavorite(btn) {
         const merchantId = btn.dataset.merchantId;
         const merchantName = btn.dataset.merchantName;
-        const heartIcon = btn.querySelector('.heart-icon');
         
         const index = favorites.findIndex(fav => fav.merchantId === merchantId);
         
@@ -119,12 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 merchantName,
                 addedAt: new Date().toISOString()
             });
-            heartIcon.textContent = '❤️';
+            btn.classList.add('favorited');
             showMessage(`已收藏 ${merchantName}`, 'success');
         } else {
             // 从收藏中移除
             favorites.splice(index, 1);
-            heartIcon.textContent = '🤍';
+            btn.classList.remove('favorited');
             showMessage(`已取消收藏 ${merchantName}`, 'info');
         }
         
@@ -137,12 +193,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         favoriteBtns.forEach(btn => {
             const merchantId = btn.dataset.merchantId;
-            const heartIcon = btn.querySelector('.heart-icon');
             
             if (favorites.some(fav => fav.merchantId === merchantId)) {
-                heartIcon.textContent = '❤️';
+                btn.classList.add('favorited');
             } else {
-                heartIcon.textContent = '🤍';
+                btn.classList.remove('favorited');
             }
         });
     }
@@ -222,7 +277,7 @@ function showFavoritesPage() {
     
     const modalContent = document.createElement('div');
     modalContent.style.cssText = `
-        background: white;
+        background: var(--card);
         border-radius: 8px;
         padding: 24px;
         max-width: 800px;
@@ -230,6 +285,7 @@ function showFavoritesPage() {
         max-height: 80vh;
         overflow-y: auto;
         position: relative;
+        color: var(--foreground);
     `;
     
     let favoritesHTML = '';

@@ -1,34 +1,36 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" style="font-family: 'SimHei', '黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;">
 <head>
+<script>(function(){var t=localStorage.getItem("theme");if(t==="dark"){document.documentElement.classList.add("dark");}else if(t==="light"){document.documentElement.classList.remove("dark");}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark");}if(document.referrer&&document.referrer.indexOf(window.location.origin)===0){document.documentElement.classList.add("page-entering");}})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ '注册' if mode == 'register' else '登录' }} - AI智能客服平台</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
         .auth-page {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--background);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-        
+
         .auth-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             max-width: 900px;
             width: 100%;
             display: flex;
-            min-height: 600px;
+            min-height: 560px;
         }
-        
+
         .auth-left {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            color: white;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--chart-2) 100%);
+            color: var(--primary-foreground);
             padding: 60px 40px;
             flex: 1;
             display: flex;
@@ -37,7 +39,7 @@
             position: relative;
             overflow: hidden;
         }
-        
+
         .auth-left::before {
             content: '';
             position: absolute;
@@ -45,15 +47,15 @@
             right: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
             animation: float 6s ease-in-out infinite;
         }
-        
+
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-20px); }
         }
-        
+
         .auth-left h2 {
             font-size: 32px;
             margin-bottom: 20px;
@@ -61,39 +63,40 @@
             position: relative;
             z-index: 1;
         }
-        
+
         .auth-left p {
-            font-size: 18px;
+            font-size: 17px;
             line-height: 1.6;
             opacity: 0.9;
             position: relative;
             z-index: 1;
         }
-        
+
         .auth-features {
             margin-top: 40px;
             position: relative;
             z-index: 1;
         }
-        
+
         .feature-item {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
-            font-size: 16px;
+            margin-bottom: 14px;
+            font-size: 15px;
         }
-        
+
         .feature-icon {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             margin-right: 12px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.15);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 14px;
         }
-        
+
         .auth-right {
             padding: 60px 50px;
             flex: 1;
@@ -101,120 +104,152 @@
             flex-direction: column;
             justify-content: center;
         }
-        
+
         .auth-header {
             text-align: center;
             margin-bottom: 40px;
         }
-        
+
         .auth-header h1 {
             font-size: 28px;
-            color: #333;
-            margin-bottom: 10px;
+            color: var(--foreground);
+            margin-bottom: 8px;
             font-weight: 700;
         }
-        
+
         .auth-header p {
-            color: #666;
-            font-size: 16px;
+            color: var(--muted-foreground);
+            font-size: 15px;
         }
-        
+
         .auth-form {
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
-        
+
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             position: relative;
         }
-        
+
         .form-group input {
             width: 100%;
-            padding: 15px 20px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            font-size: 15px;
+            transition: all 0.25s ease;
+            background: var(--input);
+            color: var(--foreground);
+            box-sizing: border-box;
         }
-        
+
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
-            background: white;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            border-color: var(--primary);
+            background: var(--card);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
-        
+
         .form-group input::placeholder {
-            color: #999;
+            color: var(--muted-foreground);
         }
-        
+
         .form-error {
-            background: #fee;
-            color: #c33;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--destructive);
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 20px;
-            border-left: 4px solid #c33;
+            border-left: 4px solid var(--destructive);
             font-size: 14px;
         }
-        
+
         .submit-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            width: 100% !important;
+            padding: 15px 24px !important;
+            background: var(--primary) !important;
+            color: var(--primary-foreground) !important;
+            border: none !important;
+            border-radius: 14px !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: all 0.3s ease !important;
+            position: relative !important;
+            overflow: hidden !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
-        
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+
+        .submit-btn .btn-text {
+            margin-right: 32px !important;
+            transition: opacity 0.4s ease !important;
         }
-        
+
+        .submit-btn .btn-arrow {
+            position: absolute !important;
+            right: 4px !important;
+            top: 4px !important;
+            bottom: 4px !important;
+            width: 25% !important;
+            border-radius: 10px !important;
+            display: grid !important;
+            place-items: center !important;
+            background: rgba(255, 255, 255, 0.15) !important;
+            transition: all 0.4s ease !important;
+        }
+
+        .submit-btn .btn-arrow svg {
+            width: 16px !important;
+            height: 16px !important;
+            stroke-width: 2 !important;
+        }
+
+        .submit-btn:hover .btn-text {
+            opacity: 0 !important;
+        }
+
+        .submit-btn:hover .btn-arrow {
+            width: calc(100% - 8px) !important;
+        }
+
         .submit-btn:active {
-            transform: translateY(0);
+            transform: scale(0.95) !important;
         }
-        
+
         .auth-links {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
-        
+
         .auth-links a {
-            color: #667eea;
+            color: var(--primary);
             text-decoration: none;
             margin: 0 10px;
             font-size: 14px;
-            transition: color 0.3s ease;
+            transition: color 0.2s ease;
         }
-        
+
         .auth-links a:hover {
-            color: #764ba2;
+            color: var(--chart-2);
             text-decoration: underline;
         }
-        
+
         .demo-accounts {
-            background: #f8f9fa;
-            border-radius: 10px;
+            background: var(--secondary);
+            border-radius: 14px;
             padding: 20px;
-            border-left: 4px solid #28a745;
+            border-left: 4px solid var(--primary);
         }
-        
+
         .demo-accounts h4 {
-            color: #28a745;
-            margin-bottom: 15px;
+            color: var(--foreground);
+            margin-bottom: 14px;
             font-size: 14px;
             font-weight: 600;
         }
-        
+
         .demo-item {
             display: flex;
             justify-content: space-between;
@@ -222,51 +257,25 @@
             margin-bottom: 8px;
             font-size: 13px;
         }
-        
-        .demo-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .demo-role {
-            font-weight: 600;
-            color: #333;
-        }
-        
+
         .demo-credentials {
-            color: #666;
-            font-family: 'Courier New', monospace;
-            background: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid #e1e5e9;
+            color: var(--muted-foreground);
+            background: var(--card);
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
         }
-        
+
         @media (max-width: 768px) {
             .auth-container {
                 flex-direction: column;
                 max-width: 400px;
             }
-            
-            .auth-left {
-                padding: 40px 30px;
-                min-height: 200px;
-            }
-            
-            .auth-left h2 {
-                font-size: 24px;
-            }
-            
-            .auth-left p {
-                font-size: 16px;
-            }
-            
-            .auth-features {
-                display: none;
-            }
-            
-            .auth-right {
-                padding: 40px 30px;
-            }
+            .auth-left { padding: 40px 30px; min-height: 160px; }
+            .auth-left h2 { font-size: 24px; }
+            .auth-left p { font-size: 15px; }
+            .auth-features { display: none; }
+            .auth-right { padding: 40px 30px; }
         }
     </style>
 </head>
@@ -290,15 +299,15 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="auth-right">
             <div class="auth-header">
                 <h1>{{ '用户注册' if mode == 'register' else '账号登录' }}</h1>
                 <p>{{ '创建账号，开始使用智能客服服务' if mode == 'register' else '登录您的账号继续使用' }}</p>
             </div>
-            
+
             {% if error %}<div class="form-error">{{ error }}</div>{% endif %}
-            
+
             <form method="post" class="auth-form">
                 <div class="form-group">
                     <input name="username" placeholder="请输入用户名" required>
@@ -307,10 +316,15 @@
                     <input name="password" type="password" placeholder="请输入密码" required>
                 </div>
                 <button type="submit" class="submit-btn">
-                    {{ '立即注册' if mode == 'register' else '立即登录' }}
+                    <span class="btn-text">{{ '立即注册' if mode == 'register' else '立即登录' }}</span>
+                    <span class="btn-arrow">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </span>
                 </button>
             </form>
-            
+
             <div class="auth-links">
                 {% if mode == 'register' %}
                 <a href="/login">已有账号？立即登录</a>
@@ -319,23 +333,24 @@
                 <a href="/merchant/apply">商户入驻</a>
                 {% endif %}
             </div>
-            
+
             <div class="demo-accounts">
                 <h4>🎯 演示账号</h4>
                 <div class="demo-item">
-                    <span class="demo-role">普通用户：</span>
+                    <span>普通用户：</span>
                     <span class="demo-credentials">user / 123456</span>
                 </div>
                 <div class="demo-item">
-                    <span class="demo-role">商户账号：</span>
+                    <span>商户账号：</span>
                     <span class="demo-credentials">tea / 123456</span>
                 </div>
                 <div class="demo-item">
-                    <span class="demo-role">平台管理：</span>
+                    <span>平台管理：</span>
                     <span class="demo-credentials">admin / 123456</span>
                 </div>
             </div>
         </div>
     </div>
+    <script src="/static/js/page_transition.js"></script>
 </body>
 </html>

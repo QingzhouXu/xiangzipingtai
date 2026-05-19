@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         favoritesGrid.innerHTML = `
             <div class="empty-favorites">
-                <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="text-align: center; padding: 40px; color: var(--muted-foreground);">
                     <div style="font-size: 48px; margin-bottom: 16px;">🤍</div>
                     <h3>还没有收藏的店铺</h3>
                     <p>去首页浏览并收藏你喜欢的店铺吧</p>

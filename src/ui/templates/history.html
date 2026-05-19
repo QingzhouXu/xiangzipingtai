@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" style="font-family: 'SimHei', '黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;">
 <head>
+<script>(function(){var t=localStorage.getItem("theme");if(t==="dark"){document.documentElement.classList.add("dark");}else if(t==="light"){document.documentElement.classList.remove("dark");}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark");}if(document.referrer&&document.referrer.indexOf(window.location.origin)===0){document.documentElement.classList.add("page-entering");}})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>历史咨询记录</title>
@@ -11,80 +12,83 @@
             margin: 0 auto;
             padding: 40px 20px;
         }
-        
+
         .history-header {
-            background: white;
-            border-radius: 15px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
         }
-        
+
         .history-header h1 {
-            color: #2c3e50;
+            color: var(--foreground);
             margin: 0 0 10px 0;
             font-size: 28px;
         }
-        
+
         .history-header p {
-            color: #7f8c8d;
+            color: var(--muted-foreground);
             margin: 0;
         }
-        
+
         .filter-bar {
             display: flex;
             gap: 15px;
             margin-bottom: 25px;
             align-items: center;
         }
-        
+
         .filter-select {
             padding: 10px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            background: white;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
             cursor: pointer;
+            color: var(--foreground);
         }
-        
+
         .search-input {
             flex: 1;
             padding: 10px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            background: white;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: var(--input);
+            color: var(--foreground);
         }
-        
+
         .history-list {
             display: grid;
             gap: 20px;
         }
-        
+
         .history-card {
-            background: white;
-            border-radius: 12px;
+            background: var(--card);
+            border-radius: 14px;
             padding: 25px;
-            border: 1px solid #e9ecef;
+            border: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
         }
-        
+
         .history-card:hover {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             transform: translateY(-2px);
         }
-        
+
         .history-info {
             flex: 1;
         }
-        
+
         .history-header-card {
             display: flex;
             align-items: center;
             margin-bottom: 15px;
         }
-        
+
         .merchant-avatar {
             width: 50px;
             height: 50px;
@@ -92,82 +96,80 @@
             margin-right: 15px;
             object-fit: cover;
         }
-        
+
         .history-details h3 {
-            color: #2c3e50;
+            color: var(--foreground);
             margin: 0 0 8px 0;
             font-size: 18px;
         }
-        
+
         .history-details p {
-            color: #7f8c8d;
+            color: var(--muted-foreground);
             margin: 0;
             font-size: 14px;
         }
-        
+
         .history-meta {
             display: flex;
             gap: 20px;
             font-size: 13px;
-            color: #95a5a6;
+            color: var(--muted-foreground);
             margin-top: 10px;
         }
-        
+
         .history-actions {
             display: flex;
             gap: 10px;
         }
-        
+
         .action-btn {
             padding: 10px 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: 500;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
         }
-        
+
         .view-btn {
-            background: #3498db;
-            color: white;
+            background: var(--primary);
+            color: var(--primary-foreground);
         }
-        
+
         .view-btn:hover {
-            background: #2980b9;
+            background: var(--chart-2);
         }
-        
+
         .delete-btn {
-            background: #dc3545;
-            color: white;
+            background: var(--destructive);
+            color: var(--destructive-foreground);
         }
-        
+
         .delete-btn:hover {
-            background: #c82333;
+            opacity: 0.85;
         }
-        
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #7f8c8d;
+            color: var(--muted-foreground);
         }
-        
+
         .empty-state-icon {
             font-size: 64px;
             margin-bottom: 20px;
         }
-        
+
         @media (max-width: 768px) {
             .history-card {
                 flex-direction: column;
                 align-items: flex-start;
             }
-            
             .history-actions {
                 margin-top: 15px;
                 width: 100%;
                 justify-content: flex-end;
             }
-            
             .filter-bar {
                 flex-direction: column;
             }
@@ -199,5 +201,6 @@
         </section>
     </main>
     <script src="/static/js/history.js"></script>
+    <script src="/static/js/page_transition.js"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" style="font-family: 'SimHei', '黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;">
 <head>
+<script>(function(){var t=localStorage.getItem("theme");if(t==="dark"){document.documentElement.classList.add("dark");}else if(t==="light"){document.documentElement.classList.remove("dark");}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark");}if(document.referrer&&document.referrer.indexOf(window.location.origin)===0){document.documentElement.classList.add("page-entering");}})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>搜索店铺</title>
@@ -66,7 +67,7 @@
             
             {% if not merchants %}
             <div class="no-results">
-                <div style="text-align: center; padding: 40px; color: #666;">
+                <div style="text-align: center; padding: 40px; color: var(--muted-foreground);">
                     <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
                     <h3>没有找到相关店铺</h3>
                     <p>试试调整搜索关键词或查看热门推荐</p>
@@ -76,5 +77,6 @@
         </section>
     </main>
     <script src="/static/js/search.js"></script>
+    <script src="/static/js/page_transition.js"></script>
 </body>
 </html>

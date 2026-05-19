@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" style="font-family: 'SimHei', '黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;">
 <head>
+<script>(function(){var t=localStorage.getItem("theme");if(t==="dark"){document.documentElement.classList.add("dark");}else if(t==="light"){document.documentElement.classList.remove("dark");}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark");}if(document.referrer&&document.referrer.indexOf(window.location.origin)===0){document.documentElement.classList.add("page-entering");}})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>平台首页</title>
@@ -8,57 +9,108 @@
 </head>
 <body class="client-page">
     {% include "partials/client_nav.html" %}
-    <main class="client-main">
-        <!-- 搜索和筛选区域 -->
-        <section class="search-section">
-            <div class="search-container">
-                <div class="search-bar">
-                    <input type="text" id="search-input" placeholder="搜索店铺名称、类别或关键词...">
-                    <button id="search-btn" class="search-button">
-                        <span>🔍</span>
-                        搜索
+    <main class="client-main-with-sidebar">
+        <!-- 侧边栏 -->
+        <aside class="category-sidebar">
+            <div class="sidebar-header-dark">
+                <span class="header-icon">🏪</span>
+                <h3>商铺分类</h3>
+            </div>
+            
+            <!-- 搜索框 -->
+            <div class="sidebar-search-dark">
+                <div class="search-wrapper">
+                    <span class="search-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.3-4.3"/>
+                        </svg>
+                    </span>
+                    <input type="text" id="search-input" placeholder="搜索店铺...">
+                    <button type="button" id="search-btn" class="enter-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 10 4 15 9 20"/>
+                            <path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+                        </svg>
                     </button>
                 </div>
-                <div class="quick-filters">
-                    <button class="filter-btn active" data-category="all">全部</button>
-                    <button class="filter-btn" data-category="咖啡">咖啡</button>
-                    <button class="filter-btn" data-category="茶饮">茶饮</button>
-                    <button class="filter-btn" data-category="甜品">甜品</button>
-                    <button class="filter-btn" data-category="餐饮">餐饮</button>
-                </div>
             </div>
-        </section>
+            
+            <nav class="category-nav-dark">
+                <button class="category-item-dark active" data-category="all">
+                    <span class="category-icon-dark">🏪</span>
+                    <span class="category-text-dark">全部</span>
+                    <span class="category-count">3</span>
+                </button>
+                <button class="category-item-dark" data-category="咖啡">
+                    <span class="category-icon-dark">☕</span>
+                    <span class="category-text-dark">咖啡</span>
+                    <span class="category-count">1</span>
+                </button>
+                <button class="category-item-dark" data-category="茶饮">
+                    <span class="category-icon-dark">🧋</span>
+                    <span class="category-text-dark">茶饮</span>
+                    <span class="category-count">1</span>
+                </button>
+                <button class="category-item-dark" data-category="甜品">
+                    <span class="category-icon-dark">🧁</span>
+                    <span class="category-text-dark">甜品</span>
+                    <span class="category-count">1</span>
+                </button>
+                <button class="category-item-dark" data-category="餐饮">
+                    <span class="category-icon-dark">🍽️</span>
+                    <span class="category-text-dark">餐饮</span>
+                    <span class="category-count">0</span>
+                </button>
+            </nav>
+        </aside>
 
-        <section class="section-title">
-            <h1>推荐商铺</h1>
-            <p>精选附近优质门店，支持智能客服即时咨询</p>
-        </section>
-        <section class="shop-grid" id="shop-grid">
-            {% for item in merchants %}
-            <article class="shop-card">
-                <div class="shop-cover-wrapper">
-                    <img src="{{ item.cover }}" alt="{{ item.name }}" class="shop-cover">
-                </div>
-                <div class="shop-card-body">
-                    <h3>{{ item.name }}</h3>
-                    <div class="shop-meta">
-                        <span>{{ item.category }}</span>
-                        <span class="rating">⭐ {{ item.rating }}</span>
+        <!-- 主内容区 -->
+        <div class="client-main">
+            <section class="section-title">
+                <h1>推荐商铺</h1>
+                <p>精选附近优质门店，支持智能客服即时咨询</p>
+            </section>
+            <section class="shop-list" id="shop-grid">
+                {% for item in merchants %}
+                <article class="shop-card-horizontal">
+                    <div class="shop-cover-horizontal">
+                        <img src="{{ item.cover }}" alt="{{ item.name }}" class="shop-cover-img">
                     </div>
-                    <p>{{ item.slogan }}</p>
-                    <div class="shop-actions">
-                        <button class="favorite-btn" data-merchant-id="{{ item.id }}" data-merchant-name="{{ item.name }}">
-                            <span class="heart-icon">🤍</span>
-                            收藏
-                        </button>
-                        <a class="primary-action" href="/chat?merchant={{ item.id }}">进店</a>
-                        <a class="outline-action" href="/chat?merchant={{ item.id }}">AI立即咨询</a>
+                    <div class="shop-card-body-horizontal">
+                        <div class="shop-info">
+                            <h3>{{ item.name }}</h3>
+                            <div class="shop-meta">
+                                <span class="category-tag">{{ item.category }}</span>
+                                <span class="rating">⭐ {{ item.rating }}</span>
+                                <span class="hours">🕐 {{ item.hours }}</span>
+                            </div>
+                            <p class="slogan">{{ item.slogan }}</p>
+                            <p class="address">📍 {{ item.address }}</p>
+                        </div>
+                        <div class="shop-actions-horizontal">
+                            <a class="primary-action-horizontal" href="/chat?merchant={{ item.id }}">
+                                <span class="action-icon">🏪</span>
+                                <span>进店</span>
+                            </a>
+                            <div class="action-group">
+                                <button class="favorite-btn" data-merchant-id="{{ item.id }}" data-merchant-name="{{ item.name }}">
+                                    <span class="heart-icon"></span>
+                                    <span>收藏</span>
+                                </button>
+                                <a class="outline-action-horizontal" href="/chat?merchant={{ item.id }}">
+                                    <span class="action-icon"></span>
+                                    <span>AI咨询</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </article>
-            {% endfor %}
-        </section>
+                </article>
+                {% endfor %}
+            </section>
+        </div>
     </main>
 <script src="/static/js/client_home.js"></script>
+<script src="/static/js/page_transition.js"></script>
 </body>
 </html>
