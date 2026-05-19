@@ -151,14 +151,18 @@
         /* ── Card ── */
         .auth-card {
             position: relative;
-            background: var(--card);
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
             border-radius: 16px;
             padding: 32px 28px;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
             overflow: hidden;
         }
         .dark .auth-card {
+            background: rgba(38, 38, 38, 0.5);
+            border-color: rgba(255, 255, 255, 0.08);
             box-shadow: 0 25px 60px rgba(0,0,0,0.5);
         }
 
@@ -309,37 +313,86 @@
         }
         .forgot-link:hover { color: var(--primary); }
 
-        /* ── Submit button ── */
+        /* ── Submit button (liquid glass) ── */
         .submit-btn {
             width: 100%;
             height: 46px;
             border: none;
-            border-radius: 12px;
-            background: var(--primary);
-            color: #fff;
+            border-radius: calc(var(--radius) + 4px);
+            background: transparent;
+            color: var(--primary-foreground);
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
             position: relative;
-            overflow: hidden;
+            isolation: isolate;
+            transition: transform 0.3s ease-out;
             margin-top: 6px;
+            padding: 0;
+        }
+        .submit-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: inherit;
+            background: var(--primary);
+            backdrop-filter: blur(8px) saturate(150%);
+            -webkit-backdrop-filter: blur(8px) saturate(150%);
+            box-shadow:
+                inset 0 0 0 1px rgba(255,255,255,0.12),
+                inset 0 1.8px 3px 0px rgba(255,255,255,0.28),
+                inset -2px -2px 0px -2px rgba(255,255,255,0.18),
+                inset -3px -8px 1px -6px rgba(255,255,255,0.12),
+                inset -0.3px -1px 4px 0px rgba(0,0,0,0.06),
+                inset -1.5px 2.5px 0px -2px rgba(0,0,0,0.1),
+                inset 0px 3px 4px -2px rgba(0,0,0,0.1),
+                inset 2px -6.5px 1px -4px rgba(0,0,0,0.06),
+                0px 1px 5px 0px rgba(0,0,0,0.08),
+                0px 6px 16px 0px rgba(0,0,0,0.06);
+            transition: background 0.4s cubic-bezier(1, 0.0, 0.4, 1), box-shadow 0.4s cubic-bezier(1, 0.0, 0.4, 1);
         }
         .submit-btn:hover {
+            transform: scale(1.04);
+        }
+        .submit-btn:hover::after {
             background: var(--chart-2);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
         }
-        .submit-btn:active { transform: scale(0.97); }
-        .submit-btn .arrow {
-            transition: transform 0.3s;
+        .submit-btn:active {
+            transform: scale(0.95);
         }
-        .submit-btn:hover .arrow {
-            transform: translateX(4px);
+        .submit-btn .btn-text {
+            margin-right: 32px;
+            transition: opacity 0.5s ease;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .submit-btn .btn-arrow {
+            position: absolute;
+            right: 4px;
+            top: 4px;
+            bottom: 4px;
+            width: 38px;
+            border-radius: calc(var(--radius) + 2px);
+            display: grid;
+            place-items: center;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.5s ease;
+        }
+        .submit-btn .btn-arrow svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+        }
+        .submit-btn:hover .btn-text {
+            opacity: 0;
+        }
+        .submit-btn:hover .btn-arrow {
+            width: calc(100% - 8px);
         }
 
         /* ── Divider ── */
@@ -409,8 +462,16 @@
             margin-top: 20px;
             padding: 16px 20px;
             border-radius: 12px;
-            background: var(--secondary);
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px) saturate(150%);
+            -webkit-backdrop-filter: blur(16px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             border-left: 4px solid var(--primary);
+        }
+        .dark .demo-section {
+            background: rgba(38, 38, 38, 0.4);
+            border-color: rgba(255, 255, 255, 0.06);
+            border-left-color: var(--primary);
         }
         .demo-section h4 {
             margin: 0 0 10px;
@@ -512,10 +573,12 @@
                     {% endif %}
 
                     <button type="submit" class="submit-btn">
-                        <span>{{ '立即注册' if mode == 'register' else '立即登录' }}</span>
-                        <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m9 18 6-6-6-6"/>
-                        </svg>
+                        <span class="btn-text">{{ '立即注册' if mode == 'register' else '立即登录' }}</span>
+                        <span class="btn-arrow">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m9 18 6-6-6-6"/>
+                            </svg>
+                        </span>
                     </button>
                 </form>
 

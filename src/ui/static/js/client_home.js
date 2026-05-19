@@ -378,8 +378,95 @@ function showFavoritesPage() {
         // 更新首页收藏按钮状态
         const favoriteBtn = document.querySelector(`[data-merchant-id="${merchantId}"]`);
         if (favoriteBtn) {
-            const heartIcon = favoriteBtn.querySelector('.heart-icon');
-            heartIcon.textContent = '🤍';
+            favoriteBtn.classList.remove('favorited');
         }
     };
 }
+
+// ── 3D tilt effect for shop cards ──
+(function() {
+    function applyTilt(elements) {
+        elements.forEach(function(card) {
+            var rafId = null;
+            var targetRx = 0, targetRy = 0;
+            var currentRx = 0, currentRy = 0;
+
+            card.addEventListener('mousemove', function(e) {
+                var rect = card.getBoundingClientRect();
+                targetRx = ((e.clientY - rect.top) / rect.height - 0.5) * -5;
+                targetRy = ((e.clientX - rect.left) / rect.width - 0.5) * 5;
+                if (!rafId) {
+                    rafId = requestAnimationFrame(update);
+                }
+            });
+
+            card.addEventListener('mouseleave', function() {
+                targetRx = 0;
+                targetRy = 0;
+                if (!rafId) {
+                    rafId = requestAnimationFrame(update);
+                }
+            });
+
+            function update() {
+                currentRx += (targetRx - currentRx) * 0.12;
+                currentRy += (targetRy - currentRy) * 0.12;
+
+                var settled = Math.abs(targetRx - currentRx) < 0.01 && Math.abs(targetRy - currentRy) < 0.01;
+
+                if (settled && targetRx === 0 && targetRy === 0) {
+                    card.style.transform = '';
+                    rafId = null;
+                } else if (settled) {
+                    card.style.transform = 'perspective(1200px) rotateX(' + targetRx.toFixed(2) + 'deg) rotateY(' + targetRy.toFixed(2) + 'deg)';
+                    rafId = null;
+                } else {
+                    card.style.transform = 'perspective(1200px) rotateX(' + currentRx.toFixed(2) + 'deg) rotateY(' + currentRy.toFixed(2) + 'deg)';
+                    rafId = requestAnimationFrame(update);
+                }
+            }
+        });
+    }
+
+    applyTilt(document.querySelectorAll('.shop-card-horizontal'));
+
+    // ── Sidebar tilt: events on stable outer, tilt on inner (no feedback loop) ──
+    var sidebar = document.querySelector('.category-sidebar');
+    var sidebarInner = document.querySelector('.sidebar-tilt-inner');
+    if (sidebar && sidebarInner) {
+        var sRaf = null;
+        var sTx = 0, sTy = 0;
+        var sCx = 0, sCy = 0;
+
+        sidebar.addEventListener('mousemove', function(e) {
+            var rect = sidebar.getBoundingClientRect();
+            sTx = ((e.clientY - rect.top) / rect.height - 0.5) * -10;
+            sTy = ((e.clientX - rect.left) / rect.width - 0.5) * 10;
+            if (!sRaf) sRaf = requestAnimationFrame(sUpdate);
+        });
+
+        sidebar.addEventListener('mouseleave', function() {
+            sTx = 0;
+            sTy = 0;
+            if (!sRaf) sRaf = requestAnimationFrame(sUpdate);
+        });
+
+        function sUpdate() {
+            sCx += (sTx - sCx) * 0.12;
+            sCy += (sTy - sCy) * 0.12;
+
+            var settled = Math.abs(sTx - sCx) < 0.01 && Math.abs(sTy - sCy) < 0.01;
+
+            if (settled && sTx === 0 && sTy === 0) {
+                sidebarInner.style.transform = '';
+                sRaf = null;
+            } else if (settled) {
+                sidebarInner.style.transform = 'perspective(1200px) rotateX(' + sTx.toFixed(2) + 'deg) rotateY(' + sTy.toFixed(2) + 'deg)';
+                sRaf = null;
+            } else {
+                sidebarInner.style.transform = 'perspective(1200px) rotateX(' + sCx.toFixed(2) + 'deg) rotateY(' + sCy.toFixed(2) + 'deg)';
+                sRaf = requestAnimationFrame(sUpdate);
+            }
+        }
+    }
+})();
