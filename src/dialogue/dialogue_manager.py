@@ -9,7 +9,7 @@
 from typing import Dict, Iterable, List, Optional
 
 from knowledge.knowledge_base import KnowledgeBase
-from llm.qwen_client import get_qwen_client
+from llm.qwen_client import get_qwen_client, reset_client
 
 
 class DialogueManager:
@@ -90,6 +90,12 @@ class DialogueManager:
 
     def set_knowledge_threshold(self, threshold: float) -> None:
         self.knowledge_threshold = threshold
+
+    def switch_backend(self, backend: str) -> dict:
+        """运行时切换 LLM 后端。返回新后端的心跳状态。"""
+        reset_client()
+        self.llm_client = get_qwen_client(backend=backend)
+        return self.llm_client.heartbeat()
 
     def _build_messages(self, user_input: str, merchant_id: str, rag: Optional[Dict]) -> List[Dict[str, str]]:
         merchant = self.knowledge_base.get_merchant(merchant_id)

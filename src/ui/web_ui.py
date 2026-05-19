@@ -621,6 +621,22 @@ class WebUI:
         def heartbeat():
             return jsonify(self.dialogue_manager.llm_client.heartbeat())
 
+        @self.app.route("/api/llm/switch", methods=["POST"])
+        def switch_llm_backend():
+            data = request.get_json(silent=True) or {}
+            backend = (data.get("backend") or "").strip()
+            if backend not in ("ollama", "dashscope", "mock"):
+                return jsonify({"error": "不支持的后端，可选: ollama / dashscope / mock"}), 400
+            try:
+                status = self.dialogue_manager.switch_backend(backend)
+                return jsonify(status)
+            except Exception as exc:
+                return jsonify({"error": f"切换失败：{exc}"}), 500
+
+        @self.app.route("/api/llm/status")
+        def llm_status():
+            return jsonify(self.dialogue_manager.llm_client.heartbeat())
+
         @self.app.route("/api/merchants")
         def merchants():
             return jsonify({"merchants": self._visible_merchants()})

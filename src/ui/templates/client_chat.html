@@ -41,7 +41,23 @@
                         </span>
                     </div>
                 </div>
-                <span class="header-badge" id="backend-badge">云端</span>
+                <div class="backend-switch-wrapper">
+                    <button class="backend-switch-btn" id="backend-switch-btn" title="切换模型后端">
+                        <span id="backend-badge">云端</span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="backend-dropdown" id="backend-dropdown">
+                        <button class="backend-option" data-backend="ollama">
+                            <span>🖥️</span> 本地模型
+                        </button>
+                        <button class="backend-option" data-backend="dashscope">
+                            <span>☁️</span> Qwen云端
+                        </button>
+                        <button class="backend-option" data-backend="mock">
+                            <span>🧪</span> 演示模式
+                        </button>
+                    </div>
+                </div>
             </header>
 
             <div class="chat-container" id="chat-container">

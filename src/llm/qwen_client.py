@@ -222,6 +222,12 @@ class MockQwenClient(BaseLLMClient):
 _default_client = None
 
 
+def reset_client() -> None:
+    """重置全局 LLM 客户端，允许在运行时切换后端。"""
+    global _default_client
+    _default_client = None
+
+
 def get_qwen_client(config: Optional[Dict] = None, use_mock: bool = False, backend: Optional[str] = None) -> BaseLLMClient:
     """获取全局 LLM 客户端。
 

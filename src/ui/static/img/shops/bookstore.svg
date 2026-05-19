@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360">
-  <rect width="800" height="360" fill="#7b4e2d"/>
-  <rect x="72" y="60" width="90" height="240" rx="12" fill="#f4d7a1"/>
-  <rect x="185" y="42" width="96" height="258" rx="12" fill="#d9a85f"/>
-  <rect x="305" y="70" width="88" height="230" rx="12" fill="#f7ebcf"/>
-  <rect x="430" y="54" width="220" height="246" rx="18" fill="#3a2d24"/>
-  <text x="462" y="174" font-family="Arial" font-size="38" font-weight="700" fill="#fff">Book Store</text>
-  <text x="462" y="220" font-family="Arial" font-size="24" fill="#f4d7a1">阅读 · 文创 · 咨询</text>
-</svg>

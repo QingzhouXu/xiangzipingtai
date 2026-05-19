@@ -6,8 +6,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetButton = document.getElementById('reset-demo');
     const quickReplies = document.getElementById('quick-replies');
     const backendBadge = document.getElementById('backend-badge');
+    const backendSwitchBtn = document.getElementById('backend-switch-btn');
+    const backendDropdown = document.getElementById('backend-dropdown');
 
     startHeartbeat();
+
+    // Backend switch dropdown toggle
+    if (backendSwitchBtn && backendDropdown) {
+        backendSwitchBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            backendDropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', () => {
+            backendDropdown.classList.remove('open');
+        });
+
+        backendDropdown.addEventListener('click', async (e) => {
+            const option = e.target.closest('.backend-option');
+            if (!option) return;
+            const newBackend = option.dataset.backend;
+
+            // Update dropdown visual state
+            backendDropdown.querySelectorAll('.backend-option').forEach(opt => opt.classList.remove('active'));
+            option.classList.add('active');
+
+            // Set badge to loading
+            backendBadge.textContent = '切换中...';
+            backendDropdown.classList.remove('open');
+
+            try {
+                const resp = await fetch('/api/llm/switch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ backend: newBackend })
+                });
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    updateBackendBadge(newBackend);
+                } else {
+                    backendBadge.textContent = '切换失败';
+                    console.error('Backend switch failed:', data.error || data);
+                }
+            } catch (err) {
+                backendBadge.textContent = '切换失败';
+                console.error('Backend switch error:', err);
+            }
+
+            // Refresh heartbeat to reflect new state
+            refreshHeartbeat();
+        });
+    }
 
     if (!merchantId || !chatContainer) {
         return;
@@ -192,40 +241,45 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function startHeartbeat() {
-    const statusEl = document.getElementById('board-status');
-    const statusDot = document.getElementById('status-dot');
-    const backendBadge = document.getElementById('backend-badge');
+    refreshHeartbeat();
+    setInterval(refreshHeartbeat, 5000);
+}
 
-    async function refresh() {
-        try {
-            const response = await fetch('/api/heartbeat');
-            const data = await response.json();
+function updateBackendBadge(backend) {
+    var el = document.getElementById('backend-badge');
+    if (!el) return;
+    var labels = { dashscope: 'Qwen云端', ollama: '本地模型', mock: '演示模式' };
+    el.textContent = labels[backend] || backend;
 
-            if (backendBadge) {
-                var backend = data.backend || 'ollama';
-                var labels = { dashscope: 'Qwen云端', ollama: '本地模型', mock: '演示模式' };
-                backendBadge.textContent = labels[backend] || backend;
-            }
+    var dropdown = document.getElementById('backend-dropdown');
+    if (dropdown) {
+        dropdown.querySelectorAll('.backend-option').forEach(function(opt) {
+            opt.classList.toggle('active', opt.dataset.backend === backend);
+        });
+    }
+}
+
+function refreshHeartbeat() {
+    var statusEl = document.getElementById('board-status');
+    var statusDot = document.getElementById('status-dot');
+
+    fetch('/api/heartbeat')
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+            updateBackendBadge(data.backend || 'ollama');
 
             if (statusEl) {
                 if (data.status === 'success') {
                     statusEl.textContent = 'AI 客服在线（' + data.latency + 'ms）';
-                    if (statusDot) {
-                        statusDot.className = 'status-dot online';
-                    }
+                    if (statusDot) statusDot.className = 'status-dot online';
                 } else {
                     statusEl.textContent = 'AI 客服离线';
-                    if (statusDot) {
-                        statusDot.className = 'status-dot offline';
-                    }
+                    if (statusDot) statusDot.className = 'status-dot offline';
                 }
             }
-        } catch {
+        })
+        .catch(function() {
             if (statusEl) statusEl.textContent = 'AI 客服离线';
             if (statusDot) statusDot.className = 'status-dot offline';
-        }
-    }
-
-    refresh();
-    setInterval(refresh, 5000);
+        });
 }

@@ -8,7 +8,7 @@
       "rating": "4.9",
       "hours": "08:00 - 22:00",
       "address": "北京市海淀区中关村大街1号",
-      "cover": "/static/img/shops/cafe.svg",
+      "cover": "/static/img/shops/coffee_shop.png",
       "avatar": "/static/img/shops/avatar-cafe.svg",
       "accent": "#ff5a00",
       "persona": {
@@ -51,7 +51,7 @@
       "rating": "4.8",
       "hours": "09:30 - 21:30",
       "address": "北京市海淀区学院路88号",
-      "cover": "/static/img/shops/bookstore.svg",
+      "cover": "/static/img/shops/book_store.png",
       "avatar": "/static/img/shops/avatar-book.svg",
       "accent": "#ff5a00",
       "persona": {
@@ -94,7 +94,7 @@
       "rating": "4.9",
       "hours": "10:00 - 21:00",
       "address": "北京市朝阳区望京西路66号",
-      "cover": "/static/img/shops/salon.svg",
+      "cover": "/static/img/shops/beauty_shop.png",
       "avatar": "/static/img/shops/avatar-salon.svg",
       "accent": "#ff5a00",
       "persona": {

@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360">
-  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#2b211d"/><stop offset="1" stop-color="#8c4a22"/></linearGradient></defs>
-  <rect width="800" height="360" fill="url(#g)"/>
-  <rect x="54" y="78" width="260" height="170" rx="18" fill="#171717" opacity=".75"/>
-  <circle cx="560" cy="100" r="34" fill="#ffbf47"/>
-  <circle cx="620" cy="145" r="22" fill="#ff5a00"/>
-  <text x="80" y="160" font-family="Arial" font-size="58" font-weight="700" fill="#ff5a00">Coffee</text>
-  <text x="82" y="207" font-family="Arial" font-size="26" fill="#fff">生活服务 便民到家</text>
-</svg>

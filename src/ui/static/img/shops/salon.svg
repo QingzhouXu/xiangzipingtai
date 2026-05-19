@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360">
-  <rect width="800" height="360" fill="#303030"/>
-  <rect x="0" y="0" width="800" height="180" fill="#1b1b1b"/>
-  <circle cx="170" cy="160" r="78" fill="#ffceb3"/>
-  <rect x="330" y="90" width="360" height="46" rx="23" fill="#555"/>
-  <rect x="330" y="154" width="300" height="46" rx="23" fill="#777"/>
-  <rect x="330" y="218" width="240" height="46" rx="23" fill="#999"/>
-  <text x="74" y="294" font-family="Arial" font-size="36" font-weight="700" fill="#fff">Beauty Life</text>
-</svg>
