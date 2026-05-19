@@ -389,35 +389,46 @@ class WebUI:
         @self.app.route("/api/official-support/messages", methods=["GET"])
         @self.login_required(["super_admin"])
         def get_official_messages():
-            # 获取所有官方客服消息
+            # 获取所有官方客服消息（仅返回用户消息，管理员回复不混入列表）
             messages = self.auth.data.get("official_messages", [])
-            return jsonify({"messages": messages})
+            # 兼容旧数据：如果没有顶层 username 字段，从 user_info 中提取
+            for msg in messages:
+                if not msg.get("username") and msg.get("user_info"):
+                    msg["username"] = msg["user_info"].get("username", "访客用户")
+            # 仅返回用户消息
+            filtered = [m for m in messages if m.get("type") == "user"]
+            return jsonify({"messages": filtered})
 
         @self.app.route("/api/official-support/messages", methods=["POST"])
+        @self.login_required(["customer", "merchant", "super_admin"])
         def send_official_message():
             # 发送官方客服消息
             data = request.get_json(silent=True) or {}
             message = (data.get("message") or "").strip()
             user_info = data.get("user_info", {})
-            
+
             if not message:
                 return jsonify({"error": "消息不能为空"}), 400
-            
+
             # 初始化消息存储
             if "official_messages" not in self.auth.data:
                 self.auth.data["official_messages"] = []
-            
+
+            # 获取当前登录用户信息
+            current_user = self.current_user()
+            username = current_user.get("display_name") or current_user.get("username", "访客用户") if current_user else "访客用户"
+
             # 添加用户消息
             user_message = {
                 "id": str(len(self.auth.data["official_messages"]) + 1),
                 "type": "user",
                 "message": message,
-                "user_info": user_info,
+                "username": username,
                 "timestamp": datetime.datetime.now().isoformat(),
                 "status": "unread"
             }
             self.auth.data["official_messages"].append(user_message)
-            
+
             # 生成官方回复
             official_response = {
                 "id": str(len(self.auth.data["official_messages"]) + 1),
@@ -437,7 +448,7 @@ class WebUI:
         def reply_official_message(message_id):
             # 管理员回复官方客服消息
             data = request.get_json(silent=True) or {}
-            reply_message = (data.get("message") or "").strip()
+            reply_message = (data.get("reply") or data.get("message") or "").strip()
             
             if not reply_message:
                 return jsonify({"error": "回复消息不能为空"}), 400
@@ -472,6 +483,16 @@ class WebUI:
             self.auth._save()
             
             return jsonify({"success": True, "reply": admin_reply})
+
+        @self.app.route("/api/official-support/my-messages", methods=["GET"])
+        @self.login_required(["customer", "merchant", "super_admin"])
+        def get_my_official_messages():
+            """客户端获取自己的官方客服对话记录"""
+            user = self.current_user()
+            username = (user.get("display_name") or user.get("username", "")) if user else ""
+            messages = self.auth.data.get("official_messages", [])
+            my_messages = [m for m in messages if m.get("username") == username and m.get("type") in ("user", "admin_reply")]
+            return jsonify({"messages": my_messages})
 
         @self.app.route("/api/platform/applications/<application_id>/details", methods=["GET"])
         @self.login_required(["super_admin"])
