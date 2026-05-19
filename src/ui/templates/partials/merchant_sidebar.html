@@ -1,9 +1,13 @@
 <aside class="merchant-sidebar">
     <div class="sidebar-title">功能菜单</div>
+    {% if current_user and current_user.role == 'super_admin' %}
+    <a class="side-link" href="/platform/admin">🛡 平台管理中心</a>
+    {% else %}
     <a class="side-link" href="/admin">▦ 工作台概览</a>
     <a class="side-link" href="/admin/store">▤ 店铺信息管理</a>
     <a class="side-link" href="/admin/persona">✣ AI形象生成</a>
     <a class="side-link" href="/admin/messages">□ 访客咨询消息</a>
     <a class="side-link" href="/admin/settings">⚙ 账号设置</a>
+    {% endif %}
     <a class="side-link muted" href="/">返回用户端</a>
 </aside>

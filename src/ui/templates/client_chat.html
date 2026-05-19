@@ -27,6 +27,37 @@
                     <button class="soft-button">&lceil; 分享</button>
                 </div>
             </div>
+
+            <!-- 评论区 -->
+            <div class="store-comments-section" data-merchant-id="{{ merchant.id }}">
+                <div class="comments-header">
+                    <h3>用户评价</h3>
+                    <span class="comments-count" id="comments-count">加载中...</span>
+                </div>
+                <div class="comments-list" id="comments-list">
+                    <div class="comments-loading">加载评论中...</div>
+                </div>
+                {% if current_user %}
+                <div class="comment-form">
+                    <h4>发表评价</h4>
+                    <div class="comment-rating">
+                        <span class="rating-label">评分：</span>
+                        <div class="star-rating" id="star-rating">
+                            <span class="star" data-rating="1">&#9733;</span>
+                            <span class="star" data-rating="2">&#9733;</span>
+                            <span class="star" data-rating="3">&#9733;</span>
+                            <span class="star" data-rating="4">&#9733;</span>
+                            <span class="star active" data-rating="5">&#9733;</span>
+                        </div>
+                    </div>
+                    <textarea id="comment-input" placeholder="分享您的体验..." maxlength="500" rows="3"></textarea>
+                    <div class="comment-form-actions">
+                        <span class="char-count" id="char-count">0/500</span>
+                        <button id="submit-comment" class="primary-action">提交评价</button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
         </section>
 
         <aside class="chat-widget">
@@ -90,6 +121,7 @@
         </aside>
     </main>
     <script src="/static/js/chat.js"></script>
+    <script src="/static/js/comments.js"></script>
     <script src="/static/js/page_transition.js"></script>
 </body>
 </html>

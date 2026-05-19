@@ -248,6 +248,12 @@ class WebUI:
         @self.app.route("/merchant")
         @self.login_required(["merchant", "super_admin"])
         def merchant_portal():
+            user = self.current_user()
+            if user and user.get("role") == "super_admin":
+                return redirect(url_for("platform_admin"))
+            if user and user.get("role") == "merchant" and user.get("status") != "approved":
+                application = next((item for item in self.auth.data["applications"] if item["owner_username"] == user["username"]), None)
+                return render_template("pending.html", application=application)
             return render_template("merchant_portal.html")
 
         @self.app.route("/official-support")
@@ -323,6 +329,8 @@ class WebUI:
             user = self.current_user()
             if not user:
                 return redirect(url_for("login"))
+            if user["role"] == "super_admin":
+                return redirect(url_for("platform_admin"))
             if user["role"] == "merchant" and user.get("status") != "approved":
                 application = next((item for item in self.auth.data["applications"] if item["owner_username"] == user["username"]), None)
                 return render_template("pending.html", application=application)
@@ -331,21 +339,33 @@ class WebUI:
         @self.app.route("/admin/store")
         @self.login_required(["merchant", "super_admin"])
         def admin_store():
+            user = self.current_user()
+            if user and user.get("role") == "super_admin":
+                return redirect(url_for("platform_admin"))
             return render_template("admin_store.html", merchant=self._current_merchant(), merchants=self._admin_merchants())
 
         @self.app.route("/admin/persona")
         @self.login_required(["merchant", "super_admin"])
         def admin_persona():
+            user = self.current_user()
+            if user and user.get("role") == "super_admin":
+                return redirect(url_for("platform_admin"))
             return render_template("admin_persona.html", merchant=self._current_merchant(), merchants=self._admin_merchants())
 
         @self.app.route("/admin/messages")
         @self.login_required(["merchant", "super_admin"])
         def admin_messages():
+            user = self.current_user()
+            if user and user.get("role") == "super_admin":
+                return redirect(url_for("platform_admin"))
             return render_template("admin_messages.html", merchant=self._current_merchant(), merchants=self._admin_merchants())
 
         @self.app.route("/admin/settings")
         @self.login_required(["merchant", "super_admin"])
         def admin_settings():
+            user = self.current_user()
+            if user and user.get("role") == "super_admin":
+                return redirect(url_for("platform_admin"))
             return render_template("admin_settings.html", merchant=self._current_merchant(), merchants=self._admin_merchants())
 
         @self.app.route("/platform/admin")
@@ -596,10 +616,20 @@ class WebUI:
                 return jsonify({"error": "消息不能为空"}), 400
 
             def event_stream():
+                import concurrent.futures
                 try:
-                    for chunk in self.dialogue_manager.stream_input(message, merchant_id=merchant_id):
-                        yield self._sse("message", {"content": chunk})
-                    yield self._sse("done", {"ok": True})
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                        future = executor.submit(
+                            lambda: list(self.dialogue_manager.stream_input(message, merchant_id=merchant_id))
+                        )
+                        try:
+                            chunks = future.result(timeout=60)
+                            for chunk in chunks:
+                                yield self._sse("message", {"content": chunk})
+                            yield self._sse("done", {"ok": True})
+                        except concurrent.futures.TimeoutError:
+                            yield self._sse("error", {"message": "模型响应超时(60s)，请确认Ollama服务是否正常运行，或切换到演示模式后重试。"})
+                            yield self._sse("done", {"ok": False})
                 except Exception as exc:
                     yield self._sse("error", {"message": f"输出中断：{exc}"})
                     yield self._sse("done", {"ok": False})
@@ -712,26 +742,20 @@ class WebUI:
             search = request.args.get("search", "").strip()
             
             try:
-                # 这里应该从数据库获取真实的咨询记录
-                # 目前返回模拟数据
-                messages = [
-                    {
-                        "id": 1,
-                        "visitor": "用户_李明",
-                        "content": "请问你们周末正常营业吗？营业时间有没有变化...",
-                        "time": "2024-01-15 14:32",
-                        "status": "unread",
-                        "merchant_id": merchant_id
-                    },
-                    {
-                        "id": 2,
-                        "visitor": "用户_王芳",
-                        "content": "有没有会员卡可以办理？折扣力度怎么样？",
-                        "time": "2024-01-15 10:18",
+                # 从 DialogueManager 会话中获取真实对话记录
+                session_key = self.dialogue_manager._session_key(merchant_id)
+                session_messages = self.dialogue_manager.sessions.get(session_key, [])
+                messages = []
+                for i, msg in enumerate(session_messages):
+                    content = msg.get("content", "")
+                    messages.append({
+                        "id": i + 1,
+                        "visitor": "用户",
+                        "content": content[:100] + ("..." if len(content) > 100 else ""),
+                        "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "status": "read",
                         "merchant_id": merchant_id
-                    }
-                ]
+                    })
                 
                 # 应用筛选
                 if filter_type == "unread":
@@ -754,6 +778,38 @@ class WebUI:
                 return jsonify({"success": True, "message": "已标记为已读"})
             except Exception as exc:
                 return jsonify({"error": f"标记失败：{exc}"}), 500
+
+        @self.app.route("/api/merchant/comments", methods=["GET"])
+        def get_merchant_comments():
+            merchant_id = request.args.get("merchant_id", "tea_shop")
+            comments = self.auth.data.get("comments", {}).get(merchant_id, [])
+            return jsonify({"comments": comments})
+
+        @self.app.route("/api/merchant/comments", methods=["POST"])
+        @self.login_required(["customer", "merchant", "super_admin"])
+        def add_merchant_comment():
+            data = request.get_json(silent=True) or {}
+            merchant_id = data.get("merchant_id", "tea_shop")
+            content = (data.get("content") or "").strip()
+            rating = data.get("rating", 5)
+
+            if not content:
+                return jsonify({"error": "评论内容不能为空"}), 400
+
+            user = self.current_user()
+            comment = {
+                "id": uuid.uuid4().hex[:10],
+                "merchant_id": merchant_id,
+                "username": user["username"] if user else "匿名用户",
+                "display_name": user.get("display_name", user["username"]) if user else "匿名用户",
+                "content": content[:500],
+                "rating": min(5, max(1, int(rating))),
+                "timestamp": datetime.datetime.now().isoformat(),
+            }
+
+            self.auth.data.setdefault("comments", {}).setdefault(merchant_id, []).append(comment)
+            self.auth._save()
+            return jsonify({"success": True, "comment": comment})
 
         @self.app.route("/api/merchant/change-password", methods=["POST"])
         @self.login_required(["merchant", "super_admin"])
@@ -926,6 +982,42 @@ class WebUI:
 
     def _generate_official_response(self, user_message: str) -> str:
         """生成官方客服回复"""
+        message = user_message.lower()
+
+        if '注册' in message or '账号' in message:
+            return '您可以在首页点击"登录/注册"按钮创建账号。注册后即可收藏店铺和使用AI客服服务。如果遇到问题，可以尝试使用演示账号：user/123456'
+
+        if '商户' in message or '入驻' in message or '申请' in message:
+            return '商户入驻请访问首页，点击"商户入驻申请"按钮。填写相关信息并提交申请，平台管理员会在1-3个工作日内审核。审核通过后即可使用商家管理后台。'
+
+        if 'ai' in message or '客服' in message or '机器人' in message:
+            return '我们的AI客服基于先进的自然语言处理技术，可以理解用户意图并提供准确的回复。商家可以在后台自定义AI形象和知识库，提升服务质量。'
+
+        if '收藏' in message or '喜欢' in message:
+            return '您可以在店铺卡片上点击"收藏"按钮来收藏喜欢的店铺。收藏后可以在"我的收藏"页面快速访问。目前收藏数据保存在本地，建议登录后使用以获得更好体验。'
+
+        if '搜索' in message or '找' in message:
+            return '您可以使用首页的搜索功能查找店铺，支持按店铺名称、类别或关键词搜索。也可以访问"全部分类"页面按类别浏览。'
+
+        if '问题' in message or '帮助' in message or '怎么用' in message:
+            return '平台主要功能包括：\n1. 浏览和搜索商家店铺\n2. 与AI客服实时对话\n3. 收藏喜欢的店铺\n4. 商户入驻和管理\n5. 官方客服支持\n\n您有具体想了解的功能吗？'
+
+        if '费用' in message or '价格' in message or '收费' in message:
+            return '目前平台处于测试阶段，所有功能均免费使用。后续可能会推出付费增值服务，但基础功能将保持免费。'
+
+        if '安全' in message or '隐私' in message:
+            return '我们非常重视用户隐私和数据安全。所有对话数据都经过加密处理，不会泄露给第三方。商家只能看到自己店铺的对话记录。'
+
+        if '投诉' in message or '举报' in message:
+            return '如果您遇到问题需要投诉，请提供详细的信息：\n1. 相关店铺名称\n2. 问题描述\n3. 发生时间\n\n我们会尽快处理并回复您。'
+
+        default_responses = [
+            '感谢您的咨询！我会尽力帮助您解决问题。请详细描述您的需求。',
+            '我理解您的问题。让我为您提供一些有用的信息和建议。',
+            '很高兴为您服务！如果您有其他问题，随时可以询问。',
+            '您的反馈对我们很重要。请告诉我更多详细信息，以便更好地帮助您。'
+        ]
+        return default_responses[len(user_message) % len(default_responses)]
 
     def _generate_persona_fallback(self, merchant: Dict) -> Dict:
         """本地模板兜底生成 AI 形象。"""
@@ -950,45 +1042,6 @@ class WebUI:
             "description": description,
             "avatar": info["avatar"],
         }
-        message = user_message.lower()
-        
-        # 常见问题回复
-        if '注册' in message or '账号' in message:
-            return '您可以在首页点击"登录/注册"按钮创建账号。注册后即可收藏店铺和使用AI客服服务。如果遇到问题，可以尝试使用演示账号：user/123456'
-        
-        if '商户' in message or '入驻' in message or '申请' in message:
-            return '商户入驻请访问首页，点击"商户入驻申请"按钮。填写相关信息并提交申请，平台管理员会在1-3个工作日内审核。审核通过后即可使用商家管理后台。'
-        
-        if 'ai' in message or '客服' in message or '机器人' in message:
-            return '我们的AI客服基于先进的自然语言处理技术，可以理解用户意图并提供准确的回复。商家可以在后台自定义AI形象和知识库，提升服务质量。'
-        
-        if '收藏' in message or '喜欢' in message:
-            return '您可以在店铺卡片上点击"收藏"按钮来收藏喜欢的店铺。收藏后可以在"我的收藏"页面快速访问。目前收藏数据保存在本地，建议登录后使用以获得更好体验。'
-        
-        if '搜索' in message or '找' in message:
-            return '您可以使用首页的搜索功能查找店铺，支持按店铺名称、类别或关键词搜索。也可以访问"全部分类"页面按类别浏览。'
-        
-        if '问题' in message or '帮助' in message or '怎么用' in message:
-            return '平台主要功能包括：\n1. 浏览和搜索商家店铺\n2. 与AI客服实时对话\n3. 收藏喜欢的店铺\n4. 商户入驻和管理\n5. 官方客服支持\n\n您有具体想了解的功能吗？'
-        
-        if '费用' in message or '价格' in message or '收费' in message:
-            return '目前平台处于测试阶段，所有功能均免费使用。后续可能会推出付费增值服务，但基础功能将保持免费。'
-        
-        if '安全' in message or '隐私' in message:
-            return '我们非常重视用户隐私和数据安全。所有对话数据都经过加密处理，不会泄露给第三方。商家只能看到自己店铺的对话记录。'
-        
-        if '投诉' in message or '举报' in message:
-            return '如果您遇到问题需要投诉，请提供详细的信息：\n1. 相关店铺名称\n2. 问题描述\n3. 发生时间\n\n我们会尽快处理并回复您。'
-        
-        # 默认回复
-        default_responses = [
-            '感谢您的咨询！我会尽力帮助您解决问题。请详细描述您的需求。',
-            '我理解您的问题。让我为您提供一些有用的信息和建议。',
-            '很高兴为您服务！如果您有其他问题，随时可以询问。',
-            '您的反馈对我们很重要。请告诉我更多详细信息，以便更好地帮助您。'
-        ]
-        
-        return default_responses[len(user_message) % len(default_responses)]
 
     def _visible_merchants(self):
         return self.dialogue_manager.knowledge_base.list_merchants()
@@ -1002,6 +1055,8 @@ class WebUI:
 
     def _current_merchant(self):
         user = self.current_user()
+        if user and user.get("role") == "super_admin":
+            return None
         merchant_id = request.args.get("merchant")
         if user and user.get("role") == "merchant":
             merchant_id = user.get("merchant_id")

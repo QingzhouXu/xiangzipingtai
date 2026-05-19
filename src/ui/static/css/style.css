@@ -615,6 +615,121 @@ html.dark .theme-toggle-btn .moon-icon {
     transform: scale(0.95);
 }
 
+/* User Avatar Pill - liquid glass avatar in nav */
+.user-avatar-pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.avatar-pill-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px 8px 8px;
+    border-radius: calc(var(--radius) + 4px);
+    cursor: pointer;
+    position: relative;
+    isolation: isolate;
+    transition: transform 0.3s ease-out;
+}
+
+.avatar-pill-trigger::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--primary);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.12),
+        inset 0 1.8px 3px 0px rgba(255,255,255,0.28),
+        inset -2px -2px 0px -2px rgba(255,255,255,0.18),
+        inset -3px -8px 1px -6px rgba(255,255,255,0.12),
+        inset -0.3px -1px 4px 0px rgba(0,0,0,0.06),
+        inset -1.5px 2.5px 0px -2px rgba(0,0,0,0.1),
+        inset 0px 3px 4px -2px rgba(0,0,0,0.1),
+        inset 2px -6.5px 1px -4px rgba(0,0,0,0.06),
+        0px 1px 5px 0px rgba(0,0,0,0.08),
+        0px 6px 16px 0px rgba(0,0,0,0.06);
+}
+
+.avatar-pill-trigger:hover {
+    transform: scale(1.04);
+}
+
+.user-avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.user-avatar-circle .default-avatar-svg {
+    width: 20px;
+    height: 20px;
+    color: var(--primary-foreground);
+}
+
+.user-avatar-circle .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-pill-name {
+    color: var(--primary-foreground);
+    font-size: 14px;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.avatar-pill-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    min-width: 140px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: all 0.2s ease;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.user-avatar-pill:hover .avatar-pill-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.avatar-dropdown-item {
+    display: block;
+    padding: 12px 16px;
+    color: var(--foreground);
+    text-decoration: none;
+    font-size: 14px;
+    transition: background 0.15s ease;
+}
+
+.avatar-dropdown-item:hover {
+    background: var(--secondary);
+}
+
 .client-main {
     padding: 28px 32px;
 }
@@ -2060,4 +2175,163 @@ html.dark .theme-toggle-btn .moon-icon {
     .table-row { grid-template-columns: 1fr; }
     .review-card { grid-template-columns: 1fr; }
     .apply-actions, .quick-admin-actions, .form-actions, .store-info, .upload-row, .persona-result { flex-direction: column; display: flex; }
+}
+
+/* Merchant Comment/Review Section */
+.store-comments-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 20px;
+}
+
+.comments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.comments-header h3 {
+    color: var(--foreground);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.comments-count {
+    color: var(--muted-foreground);
+    font-size: 0.85rem;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.comment-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: var(--secondary);
+    border-radius: 12px;
+}
+
+.comment-avatar-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.comment-body { flex: 1; min-width: 0; }
+
+.comment-author {
+    font-weight: 600;
+    color: var(--foreground);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.comment-rating-stars { display: inline-flex; gap: 2px; }
+
+.comment-star { color: var(--border); font-size: 14px; }
+
+.comment-star.filled { color: #f59e0b; }
+
+.comment-text {
+    color: var(--foreground);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.comment-time {
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    margin-top: 6px;
+}
+
+.comments-empty, .comments-loading, .comments-error {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted-foreground);
+}
+
+/* Comment form */
+.comment-form {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+}
+
+.comment-form h4 {
+    margin: 0 0 12px;
+    color: var(--foreground);
+    font-size: 0.95rem;
+}
+
+.comment-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.rating-label { color: var(--muted-foreground); font-size: 0.85rem; }
+
+.star-rating { display: flex; gap: 4px; }
+
+.star-rating .star {
+    cursor: pointer;
+    font-size: 22px;
+    color: var(--border);
+    transition: color 0.15s;
+    user-select: none;
+}
+
+.star-rating .star.active { color: #f59e0b; }
+
+#comment-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--input);
+    color: var(--foreground);
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+#comment-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.comment-form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.char-count {
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
 }

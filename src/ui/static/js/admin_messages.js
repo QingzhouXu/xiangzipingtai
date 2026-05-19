@@ -14,33 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFilter = 'all'; // 'all' 或 'unread'
     let currentSearch = '';
     
-    // 模拟数据
-    let messages = [
-        {
-            id: 1,
-            visitor: '用户_李明',
-            content: '请问你们周末正常营业吗？营业时间有没有变化...',
-            time: '2024-01-15 14:32',
-            status: 'unread',
-            merchant_id: currentMerchantId
-        },
-        {
-            id: 2,
-            visitor: '用户_王芳',
-            content: '有没有会员卡可以办理？折扣力度怎么样？',
-            time: '2024-01-15 10:18',
-            status: 'read',
-            merchant_id: currentMerchantId
-        },
-        {
-            id: 3,
-            visitor: '用户_张伟',
-            content: '你们店里的咖啡豆是什么产地的？',
-            time: '2024-01-14 16:45',
-            status: 'read',
-            merchant_id: currentMerchantId
-        }
-    ];
+    // 消息数据（从API加载）
+    let messages = [];
     
     // 初始化事件监听
     initEventListeners();
@@ -99,30 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function loadMessages() {
-        try {
-            // 这里应该调用后端API，现在使用模拟数据
-            // const response = await fetch(`/api/merchant/messages?merchant_id=${currentMerchantId}&filter=${currentFilter}&search=${encodeURIComponent(currentSearch)}`);
-            // const data = await response.json();
-            
-            // 过滤消息
-            let filteredMessages = messages.filter(msg => msg.merchant_id === currentMerchantId);
-            
-            if (currentFilter === 'unread') {
-                filteredMessages = filteredMessages.filter(msg => msg.status === 'unread');
-            }
-            
-            if (currentSearch) {
-                filteredMessages = filteredMessages.filter(msg => 
-                    msg.visitor.includes(currentSearch) || 
-                    msg.content.includes(currentSearch)
-                );
-            }
-            
-            renderMessageTable(filteredMessages);
-        } catch (error) {
-            console.error('加载消息失败:', error);
-            showMessage('加载消息失败，请刷新页面重试', 'error');
-        }
+        fetch('/api/merchant/messages?merchant_id=' + encodeURIComponent(currentMerchantId) + '&filter=' + encodeURIComponent(currentFilter) + '&search=' + encodeURIComponent(currentSearch))
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    messages = data.messages || [];
+                    renderMessageTable(messages);
+                } else {
+                    renderMessageTable([]);
+                }
+            })
+            .catch(function(error) {
+                console.error('加载消息失败:', error);
+                showMessage('加载消息失败，请刷新页面重试', 'error');
+            });
     }
     
     function renderMessageTable(messageList) {
@@ -222,24 +187,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         if (markReadBtn) {
-            markReadBtn.addEventListener('click', async () => {
-                try {
-                    // 调用API标记为已读
-                    // await fetch(`/api/merchant/messages/${message.id}/read`, { method: 'POST' });
-                    
-                    // 更新本地数据
-                    const msgIndex = messages.findIndex(m => m.id === message.id);
-                    if (msgIndex !== -1) {
-                        messages[msgIndex].status = 'read';
-                    }
-                    
-                    document.body.removeChild(modal);
-                    loadMessages();
-                    showMessage('已标记为已读', 'success');
-                } catch (error) {
-                    console.error('标记已读失败:', error);
-                    showMessage('操作失败，请重试', 'error');
-                }
+            markReadBtn.addEventListener('click', function() {
+                fetch('/api/merchant/messages/' + message.id + '/read', { method: 'POST' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            var msgIndex = messages.findIndex(function(m) { return m.id === message.id; });
+                            if (msgIndex !== -1) {
+                                messages[msgIndex].status = 'read';
+                            }
+                            document.body.removeChild(modal);
+                            loadMessages();
+                            showMessage('已标记为已读', 'success');
+                        } else {
+                            showMessage('操作失败，请重试', 'error');
+                        }
+                    })
+                    .catch(function() {
+                        showMessage('操作失败，请重试', 'error');
+                    });
             });
         }
         

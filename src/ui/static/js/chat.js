@@ -159,14 +159,44 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!fullText) {
-                renderMarkdown(textNode, '收到回复，但内容为空。请再试一次。');
+                renderMarkdown(textNode, '模型未返回内容。可能原因：本地Ollama服务异常或模型加载超时。\n\n建议：切换到"演示模式"或"Qwen云端"后重试。');
                 hideTypingIndicator(typingEl);
+            }
+
+            // Save chat history to localStorage
+            if (fullText) {
+                saveToHistory(merchantId, text, fullText);
             }
         } catch (error) {
             hideTypingIndicator(typingEl);
-            const fallback = fullText || '连接中断，当前对话已保留，请稍后重试。';
+            var fallback = fullText || '连接中断，当前对话已保留。请检查本地模型是否正常运行，或尝试切换到云端模型。';
             renderMarkdown(textNode, fallback);
-            console.error(error);
+            showErrorToast('连接失败：请确认Ollama服务正在运行，或切换到演示模式');
+        }
+    }
+
+    function saveToHistory(merchantId, userMessage, assistantReply) {
+        try {
+            var historyData = JSON.parse(localStorage.getItem('chat_history') || '{}');
+            var merchantHistory = historyData[merchantId] || [];
+            merchantHistory.push({
+                role: 'user',
+                content: userMessage,
+                timestamp: new Date().toISOString()
+            });
+            merchantHistory.push({
+                role: 'assistant',
+                content: assistantReply,
+                timestamp: new Date().toISOString()
+            });
+            // Keep only last 200 messages per merchant
+            if (merchantHistory.length > 200) {
+                merchantHistory = merchantHistory.slice(-200);
+            }
+            historyData[merchantId] = merchantHistory;
+            localStorage.setItem('chat_history', JSON.stringify(historyData));
+        } catch (e) {
+            // localStorage full or unavailable - silently ignore
         }
     }
 
@@ -282,4 +312,17 @@ function refreshHeartbeat() {
             if (statusEl) statusEl.textContent = 'AI 客服离线';
             if (statusDot) statusDot.className = 'status-dot offline';
         });
+}
+
+function showErrorToast(message) {
+    var toast = document.createElement('div');
+    toast.className = 'error-toast';
+    toast.textContent = message;
+    toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;background:#dc3545;color:white;font-size:14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+    document.body.appendChild(toast);
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(function() { if (toast.parentNode) toast.remove(); }, 300);
+    }, 5000);
 }

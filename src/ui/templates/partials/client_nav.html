@@ -3,6 +3,9 @@
         <a href="/" class="platform-logo"><img src="/static/img/shops/平台logo.jpg" alt="平台Logo"></a>
         <span class="platform-name">巷子平台</span>
     </div>
+    <script>
+        window.__currentUser = {{ (current_user.username or '') | tojson }};
+    </script>
     <nav>
         <button id="theme-toggle" class="theme-toggle-btn" aria-label="切换主题">
             <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -18,14 +21,24 @@
         <a href="/profile">个人中心</a>
         <a href="/official-support">客服帮助</a>
         {% if current_user %}
-        <a class="login-pill" href="/logout">
-            <span class="btn-text">退出登录</span>
-            <span class="btn-arrow">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m9 18 6-6-6-6"/>
-                </svg>
-            </span>
-        </a>
+        <div class="user-avatar-pill">
+            <div class="avatar-pill-trigger">
+                <div class="user-avatar-circle">
+                    {% if current_user.avatar_data %}
+                    <img src="{{ current_user.avatar_data }}" alt="{{ current_user.display_name }}" class="avatar-img">
+                    {% else %}
+                    <svg class="default-avatar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                    </svg>
+                    {% endif %}
+                </div>
+                <span class="avatar-pill-name">{{ current_user.display_name or current_user.username }}</span>
+            </div>
+            <div class="avatar-pill-dropdown">
+                <a class="avatar-dropdown-item" href="/profile">个人中心</a>
+                <a class="avatar-dropdown-item" href="/logout">退出登录</a>
+            </div>
+        </div>
         {% else %}
         <a class="login-pill" href="/login">
             <span class="btn-text">登录 / 注册</span>

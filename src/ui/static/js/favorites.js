@@ -4,8 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const favoritesCount = document.getElementById('favorites-count');
     const clearAllBtn = document.getElementById('clear-all-favorites');
     
-    // 收藏数据
-    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    // 收藏数据 - 按用户隔离
+    var favStorageKey = (window.__currentUser || 'anonymous') + '_favorites';
+    let favorites = JSON.parse(localStorage.getItem(favStorageKey) || '[]');
+
+    // 清理匿名用户的残留收藏（已登录用户）
+    if (window.__currentUser && window.__currentUser !== 'anonymous') {
+        localStorage.removeItem('anonymous_favorites');
+    }
     
     // 初始化
     loadFavorites();
@@ -164,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (index !== -1) {
             // 从收藏中移除
             favorites.splice(index, 1);
-            localStorage.setItem('favorites', JSON.stringify(favorites));
+            localStorage.setItem(favStorageKey, JSON.stringify(favorites));
             
             // 移除卡片
             const card = btn.closest('.favorite-card');
@@ -194,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const index = favorites.findIndex(fav => fav.merchantId === merchantId);
         if (index !== -1) {
             favorites.splice(index, 1);
-            localStorage.setItem('favorites', JSON.stringify(favorites));
+            localStorage.setItem(favStorageKey, JSON.stringify(favorites));
             
             // 移除卡片
             const btn = document.querySelector(`[data-merchant-id="${merchantId}"]`);
@@ -232,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         favorites = [];
-        localStorage.setItem('favorites', JSON.stringify(favorites));
+        localStorage.setItem(favStorageKey, JSON.stringify(favorites));
         updateFavoritesCount();
         showEmptyState();
         showMessage('已清空所有收藏', 'success');

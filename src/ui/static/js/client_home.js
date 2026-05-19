@@ -1,3 +1,10 @@
+var favStorageKey = (window.__currentUser || 'anonymous') + '_favorites';
+
+// 清理匿名用户的残留收藏（已登录用户）
+if (window.__currentUser && window.__currentUser !== 'anonymous') {
+    localStorage.removeItem('anonymous_favorites');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 获取DOM元素
     const searchInput = document.getElementById('search-input');
@@ -5,11 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterBtns = document.querySelectorAll('.category-item-dark');
     const shopGrid = document.getElementById('shop-grid');
     const sidebar = document.querySelector('.category-sidebar');
-    
+
     // 当前筛选状态
     let currentCategory = 'all';
     let currentSearch = '';
-    let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    let favorites = JSON.parse(localStorage.getItem(favStorageKey) || '[]');
     
     // 初始化
     initEventListeners();
@@ -185,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // 保存到本地存储
-        localStorage.setItem('favorites', JSON.stringify(favorites));
+        localStorage.setItem(favStorageKey, JSON.stringify(favorites));
     }
     
     function updateFavoriteButtons() {
@@ -257,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 收藏页面功能
 function showFavoritesPage() {
-    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    const favorites = JSON.parse(localStorage.getItem(favStorageKey) || '[]');
     
     // 创建收藏页面模态框
     const modal = document.createElement('div');
@@ -342,9 +349,9 @@ function showFavoritesPage() {
     };
     
     window.removeFavorite = (merchantId, btn) => {
-        let favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        let favorites = JSON.parse(localStorage.getItem(favStorageKey) || '[]');
         favorites = favorites.filter(fav => fav.merchantId !== merchantId);
-        localStorage.setItem('favorites', JSON.stringify(favorites));
+        localStorage.setItem(favStorageKey, JSON.stringify(favorites));
         
         // 移除收藏项
         const favoriteItem = btn.closest('.favorite-item');
