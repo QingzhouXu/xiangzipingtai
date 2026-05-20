@@ -1445,16 +1445,56 @@ html.dark .theme-toggle-btn .moon-icon {
 .send-button {
     background: var(--primary);
     color: var(--primary-foreground);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.12),
+        inset 0 1.8px 3px 0px rgba(255,255,255,0.28),
+        inset -2px -2px 0px -2px rgba(255,255,255,0.18),
+        0 2px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+}
+.primary-action:hover,
+.send-button:hover {
+    background: var(--chart-2);
+    transform: scale(1.04);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.16),
+        inset 0 1.8px 3px 0px rgba(255,255,255,0.35),
+        0 4px 18px rgba(59,130,246,0.35);
+}
+.primary-action:active,
+.send-button:active {
+    transform: scale(0.96);
 }
 .outline-action {
-    background: var(--card);
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
     color: var(--primary);
     border-color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.dark .outline-action {
+    background: rgba(255, 255, 255, 0.06);
 }
 .soft-button {
-    background: var(--secondary);
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
     color: var(--secondary-foreground);
-    border-color: var(--border);
+    border-color: rgba(0, 0, 0, 0.08);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.dark .soft-button {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: var(--foreground);
 }
 .danger-outline {
     background: var(--card);
@@ -1470,10 +1510,19 @@ html.dark .theme-toggle-btn .moon-icon {
 }
 .store-detail-card,
 .chat-widget {
-    border-radius: 8px;
-    background: var(--card);
-    box-shadow: var(--shadow);
+    border-radius: 16px;
+    background: rgba(238, 242, 250, 0.62);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.07);
     overflow: hidden;
+}
+.dark .store-detail-card,
+.dark .chat-widget {
+    background: rgba(38, 38, 38, 0.4);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 .store-top-actions {
     position: absolute;
@@ -1481,6 +1530,64 @@ html.dark .theme-toggle-btn .moon-icon {
     display: flex;
     gap: 8px;
     padding: 16px 20px;
+}
+.back-btn-glass {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    color: var(--foreground);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.2),
+        inset 0 1.5px 2px 0px rgba(255,255,255,0.3),
+        inset -1px -1px 0px -1px rgba(255,255,255,0.15),
+        0 2px 10px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
+}
+.back-btn-glass:hover {
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.25),
+        inset 0 1.5px 2px 0px rgba(255,255,255,0.35),
+        0 4px 16px rgba(0,0,0,0.08);
+}
+.back-btn-glass:active {
+    transform: scale(0.94);
+    background: rgba(240, 240, 248, 0.8);
+    box-shadow:
+        inset 0 1px 3px rgba(0,0,0,0.06),
+        0 1px 4px rgba(0,0,0,0.04);
+}
+.dark .back-btn-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        0 2px 10px rgba(0,0,0,0.2);
+}
+.dark .back-btn-glass:hover {
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.1),
+        0 4px 16px rgba(0,0,0,0.3);
+}
+.dark .back-btn-glass:active {
+    background: rgba(200, 200, 220, 0.15);
+    box-shadow:
+        inset 0 1px 3px rgba(0,0,0,0.3),
+        0 1px 4px rgba(0,0,0,0.2);
 }
 .store-detail-card { position: relative; min-height: calc(100vh - 104px); }
 .store-hero-img {
@@ -1498,6 +1605,40 @@ html.dark .theme-toggle-btn .moon-icon {
 .store-info h1 { margin: 0 0 12px; font-size: 26px; }
 .store-info p { color: var(--muted-foreground); }
 .store-buttons { display: flex; gap: 8px; align-items: flex-start; }
+.store-buttons .favorite-btn-store {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    color: var(--foreground);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.store-buttons .favorite-btn-store:hover {
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.store-buttons .favorite-btn-store.favorited {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+.store-buttons .favorite-btn-store.favorited .heart-icon svg {
+    fill: #ef4444;
+    stroke: #ef4444;
+}
+.dark .store-buttons .favorite-btn-store {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+.dark .store-buttons .favorite-btn-store:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
 .chat-widget {
     height: calc(100vh - 104px);
     display: flex;
@@ -1509,8 +1650,16 @@ html.dark .theme-toggle-btn .moon-icon {
     align-items: center;
     justify-content: space-between;
     padding: 0 22px;
-    background: var(--primary);
-    color: var(--primary-foreground);
+    background: rgba(238, 242, 250, 0.72);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    color: var(--foreground);
+}
+.dark .chat-widget-header {
+    background: rgba(38, 38, 38, 0.5);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    color: var(--foreground);
 }
 .chat-container {
     flex: 1;
@@ -1526,8 +1675,18 @@ html.dark .theme-toggle-btn .moon-icon {
     color: var(--muted-foreground);
 }
 .chat-welcome .welcome-avatar {
-    font-size: 56px;
-    margin-bottom: 12px;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--chart-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+}
+.dark .chat-welcome .welcome-avatar {
+    background: linear-gradient(135deg, var(--primary), var(--chart-3));
 }
 .chat-welcome h3 {
     margin: 0 0 6px;
@@ -1550,7 +1709,10 @@ html.dark .theme-toggle-btn .moon-icon {
     height: 32px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255,255,255,0.4);
+    border: 2px solid rgba(0,0,0,0.08);
+}
+.dark .store-bar-avatar {
+    border-color: rgba(255,255,255,0.15);
 }
 .store-bar-info strong {
     font-size: 14px;
@@ -1604,16 +1766,27 @@ html.dark .theme-toggle-btn .moon-icon {
     gap: 4px;
     padding: 4px 10px;
     border-radius: 12px;
-    border: none;
-    background: rgba(255,255,255,0.15);
-    color: var(--primary-foreground);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    color: var(--foreground);
     font-size: 12px;
     cursor: pointer;
-    transition: background 0.25s ease, transform 0.2s ease;
+    transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+.dark .backend-switch-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--foreground);
 }
 .backend-switch-btn:hover {
-    background: rgba(255,255,255,0.28);
+    background: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     transform: scale(1.05);
+}
+.dark .backend-switch-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
 }
 .backend-switch-btn:active {
     transform: scale(0.96);
@@ -1628,10 +1801,12 @@ html.dark .theme-toggle-btn .moon-icon {
     top: calc(100% + 6px);
     right: 0;
     min-width: 140px;
-    background: var(--popover);
-    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     padding: 4px;
     display: none;
     flex-direction: column;
@@ -1639,6 +1814,10 @@ html.dark .theme-toggle-btn .moon-icon {
 }
 .backend-dropdown.open {
     display: flex;
+}
+.dark .backend-dropdown {
+    background: rgba(38, 38, 38, 0.85);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 .backend-option {
     display: flex;
@@ -1663,8 +1842,8 @@ html.dark .theme-toggle-btn .moon-icon {
     color: var(--accent-foreground);
     font-weight: 600;
 }
-.backend-option span {
-    font-size: 16px;
+.backend-option svg {
+    flex-shrink: 0;
 }
 
 /* Messages */
@@ -1781,22 +1960,32 @@ html.dark .theme-toggle-btn .moon-icon {
     flex-shrink: 0;
     padding: 6px 14px;
     border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--card);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
     color: var(--foreground);
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.dark .quick-reply-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 .quick-reply-btn:hover {
-    background: var(--primary);
-    color: var(--primary-foreground);
+    background: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     border-color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(59,130,246,0.3);
 }
-
+.dark .quick-reply-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--primary);
+}
 /* Chat input row — rounded pill */
 .chat-input-row {
     display: flex;
@@ -1804,10 +1993,16 @@ html.dark .theme-toggle-btn .moon-icon {
     gap: 8px;
     margin: 8px 14px;
     padding: 4px 4px 4px 16px;
-    border: 1.5px solid var(--border);
+    border: 1.5px solid rgba(0, 0, 0, 0.08);
     border-radius: 24px;
-    background: var(--input);
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
     transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.dark .chat-input-row {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 .chat-input-row:focus-within {
     border-color: var(--primary);
@@ -1829,18 +2024,29 @@ html.dark .theme-toggle-btn .moon-icon {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     background: var(--primary);
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.12),
+        inset 0 1.8px 3px 0px rgba(255,255,255,0.28),
+        inset -2px -2px 0px -2px rgba(255,255,255,0.18),
+        0 2px 12px rgba(0,0,0,0.08);
     color: var(--primary-foreground);
     cursor: pointer;
     display: grid;
     place-items: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
     flex-shrink: 0;
 }
 .send-btn-icon:hover {
     transform: scale(1.08);
-    box-shadow: 0 2px 12px rgba(59,130,246,0.4);
+    background: var(--chart-2);
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.15),
+        inset 0 1.8px 3px 0px rgba(255,255,255,0.32),
+        0 4px 18px rgba(59,130,246,0.35);
 }
 .send-btn-icon:active {
     transform: scale(0.95);
@@ -2296,11 +2502,18 @@ html.dark .theme-toggle-btn .moon-icon {
 
 /* Merchant Comment/Review Section */
 .store-comments-section {
-    background: var(--card);
-    border: 1px solid var(--border);
+    background: rgba(238, 242, 250, 0.5);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     border-radius: 16px;
     padding: 24px;
     margin-top: 20px;
+}
+.dark .store-comments-section {
+    background: rgba(38, 38, 38, 0.35);
+    border-color: rgba(255, 255, 255, 0.06);
+}
 }
 
 .comments-header {
@@ -2315,6 +2528,9 @@ html.dark .theme-toggle-btn .moon-icon {
     font-size: 1.1rem;
     font-weight: 600;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .comments-count {
@@ -2366,9 +2582,8 @@ html.dark .theme-toggle-btn .moon-icon {
 
 .comment-rating-stars { display: inline-flex; gap: 2px; }
 
-.comment-star { color: var(--border); font-size: 14px; }
-
-.comment-star.filled { color: #f59e0b; }
+.comment-star { display: inline-flex; align-items: center; color: var(--border); }
+.comment-star svg { display: block; }
 
 .comment-text {
     color: var(--foreground);
@@ -2399,6 +2614,9 @@ html.dark .theme-toggle-btn .moon-icon {
     margin: 0 0 12px;
     color: var(--foreground);
     font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .comment-rating {
@@ -2414,13 +2632,16 @@ html.dark .theme-toggle-btn .moon-icon {
 
 .star-rating .star {
     cursor: pointer;
-    font-size: 22px;
     color: var(--border);
-    transition: color 0.15s;
+    transition: color 0.15s, transform 0.15s;
     user-select: none;
+    display: flex;
+    align-items: center;
 }
+.star-rating .star:hover { transform: scale(1.15); }
 
 .star-rating .star.active { color: #f59e0b; }
+.star-rating .star.active svg { fill: #f59e0b; }
 
 #comment-input {
     width: 100%;

@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateStars(currentRating);
             });
         }
+        // 初始状态：默认5星全亮
+        updateStars(currentRating);
     }
 
     function updateStars(rating) {
@@ -97,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
         list.innerHTML = comments.map(function(c) {
             var starsHtml = '';
             for (var i = 1; i <= 5; i++) {
-                starsHtml += '<span class="comment-star' + (i <= c.rating ? ' filled' : '') + '">&#9733;</span>';
+                starsHtml += '<span class="comment-star' + (i <= c.rating ? ' filled' : '') + '"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="' + (i <= c.rating ? '#f59e0b' : 'none') + '" stroke="' + (i <= c.rating ? '#f59e0b' : 'currentColor') + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>';
             }
             var date = new Date(c.timestamp);
             return '<div class="comment-item">' +

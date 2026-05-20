@@ -18,7 +18,8 @@
       "Bash(curl -s http://127.0.0.1:11434/api/chat -d '{\"model\":\"qwen3.5:4b\",\"messages\":[{\"role\":\"user\",\"content\":\"1+1\"}],\"stream\":false}')",
       "Bash(/c/Anaconda3/python.exe -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('content:', d['message']['content'][:100]\\)\")",
       "Bash(curl -s -c /tmp/cookie.txt -b /tmp/cookie.txt -d \"username=user&password=123456\" http://127.0.0.1:5000/login -o /dev/null)",
-      "Bash(curl -s -b /tmp/cookie.txt -X POST http://127.0.0.1:5000/api/chat/stream -H \"Content-Type: application/json\" -d '{\"message\":\"1+1等于几\",\"merchant_id\":\"tea_shop\"}')"
+      "Bash(curl -s -b /tmp/cookie.txt -X POST http://127.0.0.1:5000/api/chat/stream -H \"Content-Type: application/json\" -d '{\"message\":\"1+1等于几\",\"merchant_id\":\"tea_shop\"}')",
+      "Bash(curl -s http://127.0.0.1:11434/api/chat -d '{\"model\":\"qwen3.5:4b\",\"messages\":[{\"role\":\"user\",\"content\":\"你好，简单回复\"}],\"stream\":true}' --max-time 30)"
     ]
   }
 }

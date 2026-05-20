@@ -43,21 +43,12 @@ class DialogueManager:
         return response
 
     def stream_input(self, user_input: str, merchant_id: str = "tea_shop") -> Iterable[str]:
-        """真实 SSE 流式处理；RAG 命中也会按字符流出，保证前端统一体验。"""
+        """真实 SSE 流式处理；始终调用大模型，知识库仅作参考上下文。"""
         merchant_id = self.knowledge_base.normalize_merchant_id(merchant_id)
         history = self._history(merchant_id)
         history.append({"role": "user", "content": user_input})
 
         rag = self.knowledge_base.query_with_score(user_input, merchant_id=merchant_id)
-        if rag and rag["score"] >= self.knowledge_threshold:
-            answer = rag["answer"]
-            self.last_knowledge_answer = answer
-            for char in answer:
-                yield char
-            history.append({"role": "assistant", "content": answer})
-            self.dialogue_history = history
-            return
-
         messages = self._build_messages(user_input, merchant_id, rag)
         chunks: List[str] = []
         for chunk in self.llm_client.stream_chat(messages):
@@ -68,11 +59,8 @@ class DialogueManager:
         self.dialogue_history = history
 
     def generate_response(self, user_input: str, merchant_id: str = "tea_shop") -> str:
-        """优先 RAG，未命中再问 LLM。"""
+        """始终调用大模型，知识库仅作参考上下文。"""
         rag = self.knowledge_base.query_with_score(user_input, merchant_id=merchant_id)
-        if rag and rag["score"] >= self.knowledge_threshold:
-            self.last_knowledge_answer = rag["answer"]
-            return rag["answer"]
         return self.llm_client.chat(self._build_messages(user_input, merchant_id, rag))
 
     def rag_test(self, question: str, merchant_id: str = "tea_shop") -> Dict:

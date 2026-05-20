@@ -41,15 +41,32 @@ class QwenOllamaClient(BaseLLMClient):
     def __init__(self, config: Optional[Dict] = None):
         self.config = {
             "ollama_base": os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
-            "model_name": os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
+            "model_name": os.getenv("OLLAMA_MODEL", ""),
             "temperature": 0.6,
             "top_p": 0.9,
             "num_predict": 512,
             "keep_alive": "1h",
-            "timeout": 120,
+            "timeout": 240,
         }
         if config:
             self.config.update(config)
+        # 自动检测可用模型
+        if not self.config["model_name"]:
+            self.config["model_name"] = self._detect_model()
+
+    def _detect_model(self) -> str:
+        """检测 Ollama 已安装的模型，优先选中文对话模型。"""
+        try:
+            resp = requests.get(f"{self.config['ollama_base']}/api/tags", timeout=5)
+            resp.raise_for_status()
+            models = [m["name"] for m in resp.json().get("models", [])]
+            if not models:
+                return "qwen2.5:1.5b"
+            # 优先选择 qwen 系列
+            preferred = [m for m in models if "qwen" in m.lower()]
+            return preferred[0] if preferred else models[0]
+        except Exception:
+            return "qwen2.5:1.5b"
 
     def chat(self, messages: List[Dict[str, str]], **kwargs) -> str:
         payload = self._build_payload(messages, stream=False, kwargs=kwargs)
@@ -68,13 +85,31 @@ class QwenOllamaClient(BaseLLMClient):
             return f"模型返回解析失败：{exc}"
 
     def stream_chat(self, messages: List[Dict[str, str]], **kwargs) -> Iterable[str]:
-        # 使用非流式请求获取完整回复后再逐字符输出。
-        # 推理模型（如 qwen3.5）会先输出 thinking 过程，流式时 content 长时间为空，
-        # 导致前端收不到内容。非流式模式下 content 包含最终回答，稳定可靠。
+        """真实流式请求，按 chunk 输出，兼容思考/推理模型的输出格式。"""
+        payload = self._build_payload(messages, stream=True, kwargs=kwargs)
         try:
-            text = self.chat(messages, **kwargs)
-            for char in text:
-                yield char
+            response = requests.post(
+                f"{self.config['ollama_base']}/api/chat",
+                json=payload,
+                timeout=self.config["timeout"],
+                stream=True,
+            )
+            response.raise_for_status()
+            for line in response.iter_lines(decode_unicode=True):
+                if not line:
+                    continue
+                try:
+                    chunk = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                content = chunk.get("message", {}).get("content", "")
+                if content:
+                    yield content
+                if chunk.get("done") and not content:
+                    # 思考模型可能只在 message.content 里放内容，done 时才汇总
+                    final_content = chunk.get("message", {}).get("content", "")
+                    if final_content:
+                        yield final_content
         except Exception as exc:
             yield f"\n\n开发板模型连接中断。错误信息：{exc}"
 

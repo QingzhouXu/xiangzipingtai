@@ -112,9 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.value = '';
 
         var typingEl = showTypingIndicator();
-
-        var botMessage = addMessage('', false, true);
-        var textNode = botMessage.querySelector('.message-text');
+        var botMessage = null;
+        var textNode = null;
         var fullText = '';
 
         try {
@@ -132,8 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('咨询服务暂时不可用');
             }
 
-            hideTypingIndicator(typingEl);
-
             const reader = response.body.getReader();
             const decoder = new TextDecoder('utf-8');
             let buffer = '';
@@ -147,10 +144,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 for (const eventText of events) {
                     const parsed = parseSse(eventText);
                     if (parsed.event === 'message') {
+                        // Create bot bubble on first content, replacing typing indicator
+                        if (!botMessage) {
+                            hideTypingIndicator(typingEl);
+                            botMessage = addMessage('', false);
+                            textNode = botMessage.querySelector('.message-text');
+                        }
                         fullText += parsed.data.content || '';
                         renderMarkdown(textNode, fullText);
                     }
                     if (parsed.event === 'error') {
+                        if (!botMessage) {
+                            hideTypingIndicator(typingEl);
+                            botMessage = addMessage('', false);
+                            textNode = botMessage.querySelector('.message-text');
+                        }
                         fullText += '\n\n' + (parsed.data.message || '输出中断');
                         renderMarkdown(textNode, fullText);
                     }
@@ -159,8 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!fullText) {
-                renderMarkdown(textNode, '模型未返回内容。可能原因：本地Ollama服务异常或模型加载超时。\n\n建议：切换到"演示模式"或"Qwen云端"后重试。');
                 hideTypingIndicator(typingEl);
+                botMessage = addMessage('', false);
+                textNode = botMessage.querySelector('.message-text');
+                renderMarkdown(textNode, '模型未返回内容。可能原因：本地Ollama服务异常或模型加载超时。\n\n建议：切换到"演示模式"或"Qwen云端"后重试。');
             }
 
             // Save chat history to localStorage
@@ -169,6 +179,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             hideTypingIndicator(typingEl);
+            if (!botMessage) {
+                botMessage = addMessage('', false);
+                textNode = botMessage.querySelector('.message-text');
+            }
             var fallback = fullText || '连接中断，当前对话已保留。请检查本地模型是否正常运行，或尝试切换到云端模型。';
             renderMarkdown(textNode, fallback);
             showErrorToast('连接失败：请确认Ollama服务正在运行，或切换到演示模式');
