@@ -161,7 +161,22 @@ class WebUI:
 
         @self.app.route("/")
         def index():
-            return render_template("client_home.html", merchants=self._visible_merchants())
+            merchants = self._visible_merchants()
+            # 从实际商家数据计算分类和数量
+            category_counts = {}
+            for m in merchants:
+                cat = m.get("category", "其他") or "其他"
+                category_counts[cat] = category_counts.get(cat, 0) + 1
+            categories = [
+                {"name": "全部", "key": "all", "count": len(merchants), "icon": "all"},
+                {"name": "餐饮", "key": "餐饮", "count": category_counts.get("餐饮", 0), "icon": "food"},
+                {"name": "咖啡", "key": "咖啡", "count": category_counts.get("咖啡", 0), "icon": "coffee"},
+                {"name": "茶饮", "key": "茶饮", "count": category_counts.get("茶饮", 0), "icon": "tea"},
+                {"name": "甜品", "key": "甜品", "count": category_counts.get("甜品", 0), "icon": "dessert"},
+                {"name": "生活服务", "key": "生活服务", "count": category_counts.get("生活服务", 0), "icon": "service"},
+                {"name": "其他", "key": "其他", "count": category_counts.get("其他", 0), "icon": "other"},
+            ]
+            return render_template("client_home.html", merchants=merchants, categories=categories)
 
         @self.app.route("/profile")
         @self.login_required(["customer", "merchant", "super_admin"])
@@ -1254,7 +1269,7 @@ class WebUI:
         kb.merchants[merchant_id] = {
             "id": merchant_id,
             "name": application["merchant_name"],
-            "slogan": application["category"],
+            "slogan": application.get("slogan") or f"{application['merchant_name']} · 品质服务",
             "category": application["category"],
             "rating": "4.8",
             "hours": "09:00 - 21:00",
