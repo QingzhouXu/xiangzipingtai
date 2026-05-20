@@ -443,6 +443,38 @@ class WebUI:
             
             return jsonify({"success": True, "response": official_response["message"]})
 
+        @self.app.route("/api/official-support/stream", methods=["POST"])
+        def official_stream():
+            """官方客服流式响应。"""
+            data = request.get_json(silent=True) or {}
+            message = (data.get("message") or "").strip()
+            if not message:
+                return jsonify({"error": "消息不能为空"}), 400
+
+            def event_stream():
+                try:
+                    messages = [
+                        {"role": "system", "content": (
+                            "你是AI智能客服平台的官方客服助手。你的职责是帮助用户了解和使用平台功能。"
+                            "平台功能包括：\n"
+                            "1. 浏览和搜索商家店铺（首页）\n"
+                            "2. 与商家AI客服实时对话（进入商家详情页）\n"
+                            "3. 收藏喜欢的店铺\n"
+                            "4. 商户入驻申请（/merchant/apply）\n"
+                            "5. 用户注册登录\n\n"
+                            "请使用中文，回答要简洁、准确、友好。不要编造不存在的信息。"
+                        )},
+                        {"role": "user", "content": message}
+                    ]
+                    for chunk in self.dialogue_manager.llm_client.stream_chat(messages):
+                        yield self._sse("message", {"content": chunk})
+                    yield self._sse("done", {"ok": True})
+                except Exception as exc:
+                    yield self._sse("error", {"message": f"输出中断：{exc}"})
+                    yield self._sse("done", {"ok": False})
+
+            return Response(stream_with_context(event_stream()), mimetype="text/event-stream")
+
         @self.app.route("/api/official-support/messages/<message_id>/reply", methods=["POST"])
         @self.login_required(["super_admin"])
         def reply_official_message(message_id):
@@ -1002,7 +1034,28 @@ class WebUI:
         return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
     def _generate_official_response(self, user_message: str) -> str:
-        """生成官方客服回复"""
+        """生成官方客服回复：优先使用 LLM，失败时回退到关键词匹配。"""
+        try:
+            messages = [
+                {"role": "system", "content": (
+                    "你是AI智能客服平台的官方客服助手。你的职责是帮助用户了解和使用平台功能。"
+                    "平台功能包括：\n"
+                    "1. 浏览和搜索商家店铺（首页）\n"
+                    "2. 与商家AI客服实时对话（进入商家详情页）\n"
+                    "3. 收藏喜欢的店铺\n"
+                    "4. 商户入驻申请（/merchant/apply）\n"
+                    "5. 用户注册登录\n\n"
+                    "请使用中文，回答要简洁、准确、友好。不要编造不存在的信息。"
+                )},
+                {"role": "user", "content": user_message}
+            ]
+            response = self.dialogue_manager.llm_client.chat(messages)
+            if response and not response.startswith("开发板模型") and not response.startswith("云端模型"):
+                return response
+        except Exception:
+            pass
+
+        # ── LLM 不可用时的关键词兜底 ──
         message = user_message.lower()
 
         if '注册' in message or '账号' in message:
@@ -1015,7 +1068,7 @@ class WebUI:
             return '我们的AI客服基于先进的自然语言处理技术，可以理解用户意图并提供准确的回复。商家可以在后台自定义AI形象和知识库，提升服务质量。'
 
         if '收藏' in message or '喜欢' in message:
-            return '您可以在店铺卡片上点击"收藏"按钮来收藏喜欢的店铺。收藏后可以在"我的收藏"页面快速访问。目前收藏数据保存在本地，建议登录后使用以获得更好体验。'
+            return '您可以在店铺卡片上点击"收藏"按钮来收藏喜欢的店铺。收藏后可以在"我的收藏"页面快速访问。'
 
         if '搜索' in message or '找' in message:
             return '您可以使用首页的搜索功能查找店铺，支持按店铺名称、类别或关键词搜索。也可以访问"全部分类"页面按类别浏览。'
@@ -1027,7 +1080,7 @@ class WebUI:
             return '目前平台处于测试阶段，所有功能均免费使用。后续可能会推出付费增值服务，但基础功能将保持免费。'
 
         if '安全' in message or '隐私' in message:
-            return '我们非常重视用户隐私和数据安全。所有对话数据都经过加密处理，不会泄露给第三方。商家只能看到自己店铺的对话记录。'
+            return '我们非常重视用户隐私和数据安全。所有对话数据都经过加密处理，不会泄露给第三方。'
 
         if '投诉' in message or '举报' in message:
             return '如果您遇到问题需要投诉，请提供详细的信息：\n1. 相关店铺名称\n2. 问题描述\n3. 发生时间\n\n我们会尽快处理并回复您。'

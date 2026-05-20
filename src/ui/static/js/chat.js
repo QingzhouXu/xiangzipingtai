@@ -149,9 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             hideTypingIndicator(typingEl);
                             botMessage = addMessage('', false);
                             textNode = botMessage.querySelector('.message-text');
+                            textNode.classList.add('streaming');
                         }
                         fullText += parsed.data.content || '';
                         renderMarkdown(textNode, fullText);
+                        // Trigger fade-in animation on each chunk
+                        textNode.classList.remove('chunk-fade');
+                        void textNode.offsetWidth;
+                        textNode.classList.add('chunk-fade');
                     }
                     if (parsed.event === 'error') {
                         if (!botMessage) {
@@ -173,6 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderMarkdown(textNode, '模型未返回内容。可能原因：本地Ollama服务异常或模型加载超时。\n\n建议：切换到"演示模式"或"Qwen云端"后重试。');
             }
 
+            // Remove streaming glow
+            if (textNode) textNode.classList.remove('streaming', 'chunk-fade');
+
             // Save chat history to localStorage
             if (fullText) {
                 saveToHistory(merchantId, text, fullText);
@@ -185,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             var fallback = fullText || '连接中断，当前对话已保留。请检查本地模型是否正常运行，或尝试切换到云端模型。';
             renderMarkdown(textNode, fallback);
+            if (textNode) textNode.classList.remove('streaming', 'chunk-fade');
             showErrorToast('连接失败：请确认Ollama服务正在运行，或切换到演示模式');
         }
     }

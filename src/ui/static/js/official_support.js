@@ -3,9 +3,58 @@ document.addEventListener('DOMContentLoaded', function () {
     var messageInput = document.getElementById('message-input');
     var sendBtn = document.getElementById('send-btn');
     var chatForm = document.getElementById('chat-form');
+    var backendBadge = document.getElementById('backend-badge');
+    var backendSwitchBtn = document.getElementById('backend-switch-btn');
+    var backendDropdown = document.getElementById('backend-dropdown');
 
     var officialAvatarSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
     var userAvatarSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+
+    startHeartbeat();
+
+    // ── Backend switch dropdown ──
+    if (backendSwitchBtn && backendDropdown) {
+        backendSwitchBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            backendDropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', function () {
+            backendDropdown.classList.remove('open');
+        });
+
+        backendDropdown.addEventListener('click', function (e) {
+            var option = e.target.closest('.backend-option');
+            if (!option) return;
+            var newBackend = option.dataset.backend;
+
+            backendDropdown.querySelectorAll('.backend-option').forEach(function (opt) { opt.classList.remove('active'); });
+            option.classList.add('active');
+
+            backendBadge.textContent = '切换中...';
+            backendDropdown.classList.remove('open');
+
+            fetch('/api/llm/switch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ backend: newBackend })
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.status === 'success') {
+                        updateBackendBadge(newBackend);
+                    } else {
+                        backendBadge.textContent = '切换失败';
+                    }
+                })
+                .catch(function () {
+                    backendBadge.textContent = '切换失败';
+                })
+                .finally(function () {
+                    refreshHeartbeat();
+                });
+        });
+    }
 
     initEventListeners();
     loadMyMessages();
@@ -66,30 +115,127 @@ document.addEventListener('DOMContentLoaded', function () {
             sendBtn.textContent = '发送中...';
         }
 
-        var userInfoEl = document.querySelector('.support-user-info span');
-        var username = userInfoEl ? userInfoEl.textContent : '访客用户';
+        // Show typing indicator
+        var typingEl = addTypingIndicator();
+        var botMessage = null;
+        var textNode = null;
+        var fullText = '';
 
-        fetch('/api/official-support/messages', {
+        fetch('/api/official-support/stream', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message, user_info: { username: username } })
+            body: JSON.stringify({ message: message })
         })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.success && data.response) {
-                    addMessage(data.response, 'official');
+            .then(function (response) {
+                if (!response.ok || !response.body) throw new Error('Stream unavailable');
+                var reader = response.body.getReader();
+                var decoder = new TextDecoder('utf-8');
+                var buffer = '';
+
+                function pump() {
+                    return reader.read().then(function (result) {
+                        if (result.done) {
+                            finishStream();
+                            return;
+                        }
+                        buffer += decoder.decode(result.value, { stream: true });
+                        var events = buffer.split('\n\n');
+                        buffer = events.pop() || '';
+                        events.forEach(function (eventText) {
+                            var parsed = parseSseEvent(eventText);
+                            if (parsed.event === 'message') {
+                                if (!botMessage) {
+                                    hideTypingIndicator(typingEl);
+                                    botMessage = addMessage('', 'official');
+                                    textNode = botMessage.querySelector('.message-content');
+                                    textNode.classList.add('streaming');
+                                }
+                                fullText += parsed.data.content || '';
+                                if (textNode) {
+                                    textNode.innerHTML = '<div>' + escapeHtml(fullText).replace(/\n/g, '<br>') + '<div class="message-time">' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + '</div></div>';
+                                    textNode.classList.remove('chunk-fade');
+                                    void textNode.offsetWidth;
+                                    textNode.classList.add('chunk-fade');
+                                }
+                            }
+                            if (parsed.event === 'error') {
+                                if (!botMessage) {
+                                    hideTypingIndicator(typingEl);
+                                    botMessage = addMessage('', 'official');
+                                    textNode = botMessage.querySelector('.message-content');
+                                }
+                                fullText += '\n\n' + (parsed.data.message || '输出中断');
+                                if (textNode) {
+                                    textNode.innerHTML = '<div>' + escapeHtml(fullText).replace(/\n/g, '<br>') + '<div class="message-time">' + new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + '</div></div>';
+                                }
+                            }
+                            if (parsed.event === 'done') {
+                                finishStream();
+                                return;
+                            }
+                        });
+                        scrollToBottom();
+                        return pump();
+                    });
+                }
+                return pump();
+
+                function finishStream() {
+                    if (textNode) textNode.classList.remove('streaming', 'chunk-fade');
+                    if (!fullText && !botMessage) {
+                        hideTypingIndicator(typingEl);
+                        botMessage = addMessage(generateOfficialResponse(message), 'official');
+                    }
+                    if (sendBtn) {
+                        sendBtn.disabled = false;
+                        sendBtn.textContent = '发送';
+                    }
                 }
             })
             .catch(function () {
-                var fallback = generateOfficialResponse(message);
-                addMessage(fallback, 'official');
-            })
-            .finally(function () {
+                hideTypingIndicator(typingEl);
                 if (sendBtn) {
                     sendBtn.disabled = false;
                     sendBtn.textContent = '发送';
                 }
+                if (!fullText) {
+                    var fallback = generateOfficialResponse(message);
+                    addMessage(fallback, 'official');
+                }
             });
+    }
+
+    function parseSseEvent(eventText) {
+        var lines = eventText.split('\n');
+        var event = 'message';
+        var data = {};
+        lines.forEach(function (line) {
+            if (line.startsWith('event:')) event = line.replace('event:', '').trim();
+            if (line.startsWith('data:')) {
+                try { data = JSON.parse(line.replace('data:', '').trim()); } catch (e) {}
+            }
+        });
+        return { event: event, data: data };
+    }
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function addTypingIndicator() {
+        if (!chatMessages) return null;
+        var el = document.createElement('div');
+        el.className = 'message official';
+        el.innerHTML = '<div class="message-avatar">' + officialAvatarSvg + '</div><div class="message-content"><div class="typing-indicator"><span class="shining-text">AI is Thinking...</span></div></div>';
+        chatMessages.appendChild(el);
+        scrollToBottom();
+        return el;
+    }
+
+    function hideTypingIndicator(el) {
+        if (el && el.parentNode) el.remove();
     }
 
     function addMessage(content, type, timestamp) {
@@ -105,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
         messageDiv.innerHTML = '<div class="message-avatar">' + avatar + '</div><div class="message-content">' + content + '<div class="message-time">' + time + '</div></div>';
         chatMessages.appendChild(messageDiv);
         scrollToBottom();
+        return messageDiv;
     }
 
     function generateOfficialResponse(userMessage) {
@@ -204,4 +351,49 @@ document.addEventListener('DOMContentLoaded', function () {
         applyTilt(document.querySelectorAll('.support-info-card, .support-quick-links'), 12);
         applyTilt(document.querySelectorAll('.support-chat'), 6);
     })();
+
+    // ── Heartbeat ──
+    function startHeartbeat() {
+        refreshHeartbeat();
+        setInterval(refreshHeartbeat, 5000);
+    }
+
+    function updateBackendBadge(backend) {
+        var el = document.getElementById('backend-badge');
+        if (!el) return;
+        var labels = { dashscope: 'Qwen云端', ollama: '本地模型', mock: '演示模式' };
+        el.textContent = labels[backend] || backend;
+
+        var dropdown = document.getElementById('backend-dropdown');
+        if (dropdown) {
+            dropdown.querySelectorAll('.backend-option').forEach(function (opt) {
+                opt.classList.toggle('active', opt.dataset.backend === backend);
+            });
+        }
+    }
+
+    function refreshHeartbeat() {
+        var statusEl = document.getElementById('board-status');
+        var statusDot = document.getElementById('status-dot');
+
+        fetch('/api/heartbeat')
+            .then(function (resp) { return resp.json(); })
+            .then(function (data) {
+                updateBackendBadge(data.backend || 'ollama');
+
+                if (statusEl) {
+                    if (data.status === 'success') {
+                        statusEl.textContent = '在线服务中（' + data.latency + 'ms）';
+                        if (statusDot) statusDot.className = 'chat-status-dot';
+                    } else {
+                        statusEl.textContent = 'AI 客服离线';
+                        if (statusDot) statusDot.className = 'chat-status-dot offline';
+                    }
+                }
+            })
+            .catch(function () {
+                if (statusEl) statusEl.textContent = 'AI 客服离线';
+                if (statusDot) statusDot.className = 'chat-status-dot offline';
+            });
+    }
 });

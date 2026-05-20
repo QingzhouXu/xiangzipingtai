@@ -44,7 +44,7 @@ class QwenOllamaClient(BaseLLMClient):
             "model_name": os.getenv("OLLAMA_MODEL", ""),
             "temperature": 0.6,
             "top_p": 0.9,
-            "num_predict": 512,
+            "num_predict": 2048,
             "keep_alive": "1h",
             "timeout": 240,
         }
@@ -138,6 +138,7 @@ class QwenOllamaClient(BaseLLMClient):
                 "temperature": config.get("temperature", 0.6),
                 "top_p": config.get("top_p", 0.9),
                 "num_predict": config.get("num_predict", 512),
+                "think": 0,
             },
         }
 

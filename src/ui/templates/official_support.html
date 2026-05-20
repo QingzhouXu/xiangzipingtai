@@ -229,20 +229,19 @@
         /* ── Chat widget — acrylic ── */
         .support-chat {
             flex: 1;
-            background: rgba(238, 242, 250, 0.62);
+            background: linear-gradient(170deg, rgba(244, 246, 252, 0.75) 0%, rgba(238, 242, 250, 0.55) 100%);
             backdrop-filter: blur(20px) saturate(160%);
             -webkit-backdrop-filter: blur(20px) saturate(160%);
-            border: 1px solid rgba(0, 0, 0, 0.07);
+            border: 1px solid rgba(0, 0, 0, 0.05);
             border-radius: 20px;
             box-shadow: 0 6px 28px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04);
             display: flex;
             flex-direction: column;
             height: 640px;
-            overflow: hidden;
         }
         .dark .support-chat {
-            background: rgba(38, 38, 38, 0.4);
-            border-color: rgba(255, 255, 255, 0.08);
+            background: linear-gradient(170deg, rgba(38, 38, 38, 0.5) 0%, rgba(28, 28, 28, 0.45) 100%);
+            border-color: rgba(255, 255, 255, 0.06);
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
         }
 
@@ -258,6 +257,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
+            z-index: 50;
         }
         .dark .chat-header {
             background: rgba(38, 38, 38, 0.5);
@@ -304,6 +305,16 @@
             border-radius: 50%;
             display: inline-block;
             box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+            animation: pulse-status 2s ease-in-out infinite;
+        }
+        .chat-status-dot.offline {
+            background: #ef4444;
+            box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+            animation: none;
+        }
+        @keyframes pulse-status {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
         }
 
         /* ── Messages area ── */
@@ -352,23 +363,65 @@
             position: relative;
             font-size: 14px;
             line-height: 1.5;
+            transition: box-shadow 0.6s ease, border-color 0.6s ease;
+        }
+        /* ── Streaming glow for official chat ── */
+        .message.official .message-content.streaming {
+            box-shadow: 0 0 18px rgba(59, 130, 246, 0.25), inset 0 0 8px rgba(59, 130, 246, 0.06);
+            border-color: rgba(59, 130, 246, 0.35) !important;
+        }
+        .chunk-fade {
+            animation: chunkFadeIn 0.35s ease-out both;
+        }
+        @keyframes chunkFadeIn {
+            from { opacity: 0.4; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* ── Typing shimmer ── */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .shining-text {
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 500;
+            background: linear-gradient(110deg, var(--muted-foreground), 35%, #6b7280, 50%, var(--muted-foreground), 65%, var(--muted-foreground));
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: shimmer-text 2s linear infinite;
+        }
+        @keyframes shimmer-text {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .dark .shining-text {
+            background-image: linear-gradient(110deg, rgba(255,255,255,0.45), 35%, #fff, 50%, rgba(255,255,255,0.45), 75%, rgba(255,255,255,0.45));
         }
         .message.official .message-content {
-            background: rgba(238, 242, 250, 0.7);
+            background: linear-gradient(135deg, rgba(238, 242, 250, 0.75), rgba(244, 246, 252, 0.65));
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             color: var(--foreground);
-            border: 1px solid rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.05);
             border-bottom-left-radius: 4px;
+            border-top-left-radius: 4px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
         }
         .message.user .message-content {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--chart-2));
             color: var(--primary-foreground);
             border-bottom-right-radius: 4px;
+            border-top-right-radius: 4px;
+            box-shadow: 0 2px 12px rgba(59, 130, 246, 0.25);
         }
         .dark .message.official .message-content {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.08);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+            border-color: rgba(255, 255, 255, 0.06);
         }
 
         .message-time {
@@ -539,11 +592,27 @@
                     </div>
                     <div class="chat-status">
                         <div class="chat-name">官方客服助手</div>
-                        <div class="chat-status-text">在线服务中</div>
+                        <div class="chat-status-text" id="board-status">在线服务中</div>
                     </div>
                 </div>
                 <div>
-                    <span class="chat-status-dot"></span>
+                    <div class="backend-switch-wrapper">
+                        <button class="backend-switch-btn" id="backend-switch-btn" title="切换模型后端">
+                            <span id="backend-badge">云端</span>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <div class="backend-dropdown" id="backend-dropdown">
+                            <button class="backend-option" data-backend="ollama">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                本地模型
+                            </button>
+                            <button class="backend-option" data-backend="dashscope">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                                云端模型
+                            </button>
+                        </div>
+                    </div>
+                    <span class="chat-status-dot" id="status-dot"></span>
                 </div>
             </div>
 
