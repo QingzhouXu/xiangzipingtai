@@ -28,7 +28,8 @@
       "Bash(timeout 20 curl -s -N \"http://127.0.0.1:5000/api/official-support/stream\" -X POST -H \"Content-Type: application/json\" -d \"{\\\\\"message\\\\\":\\\\\"你好\\\\\"}\")",
       "Bash(curl -s http://127.0.0.1:5000/static/css/style.css)",
       "Bash(curl -s http://127.0.0.1:5000/static/js/official_support.js)",
-      "Bash(curl -s http://127.0.0.1:5000/official-support)"
+      "Bash(curl -s http://127.0.0.1:5000/official-support)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5000/)"
     ]
   }
 }

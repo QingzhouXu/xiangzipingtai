@@ -53,25 +53,36 @@
     (function() {
         var pill = document.querySelector('.user-avatar-pill');
         if (!pill) return;
+        var trigger = pill.querySelector('.avatar-pill-trigger');
         var dropdown = pill.querySelector('.avatar-pill-dropdown');
-        if (!dropdown) return;
-        var hideTimer = null;
+        if (!trigger || !dropdown) return;
 
-        function showDropdown() {
-            if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+        var hideTimer = null;
+        var HIDE_DELAY = 250;
+
+        function cancelHide() {
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+                hideTimer = null;
+            }
+        }
+
+        function openMenu() {
+            cancelHide();
             pill.classList.add('open');
         }
 
-        function hideDropdown() {
+        function scheduleClose() {
+            cancelHide();
             hideTimer = setTimeout(function() {
                 pill.classList.remove('open');
-            }, 100);
+            }, HIDE_DELAY);
         }
 
-        pill.addEventListener('mouseenter', showDropdown);
-        pill.addEventListener('mouseleave', hideDropdown);
-        dropdown.addEventListener('mouseenter', showDropdown);
-        dropdown.addEventListener('mouseleave', hideDropdown);
+        trigger.addEventListener('mouseenter', openMenu);
+        trigger.addEventListener('mouseleave', scheduleClose);
+        dropdown.addEventListener('mouseenter', openMenu);
+        dropdown.addEventListener('mouseleave', scheduleClose);
     })();
     </script>
 </header>

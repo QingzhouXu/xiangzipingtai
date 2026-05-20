@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentMerchantId = document.body.dataset.merchantId || 'tea_shop';
     
     // 表单元素
-    const storeNameInput = document.querySelector('input[value="{{ merchant.name }}"]');
-    const storeSloganTextarea = document.querySelector('textarea');
+    const storeNameInput = document.getElementById('store-name');
+    const storeSloganTextarea = document.getElementById('store-slogan');
     const resetButton = document.querySelector('.form-actions .soft-button');
     const saveButton = document.querySelector('.form-actions .primary-action');
     

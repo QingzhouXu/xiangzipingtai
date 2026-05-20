@@ -116,6 +116,32 @@
           "category": "门店信息"
         }
       ]
+    },
+    "merchant_ec5c32b1": {
+      "id": "merchant_ec5c32b1",
+      "name": "奶龙的雷霆",
+      "slogan": "服务业",
+      "category": "服务业",
+      "rating": "4.8",
+      "hours": "09:00 - 21:00",
+      "address": "待完善",
+      "cover": "/static/img/shops/cafe.svg",
+      "avatar": "/static/img/shops/avatar-store.svg",
+      "accent": "#ff5a00",
+      "knowledge": [
+        {
+          "id": "merchant_ec5c32b1_welcome",
+          "question": "营业时间是什么？",
+          "answer": "奶龙的雷霆 的营业时间可以在商家中心完善。",
+          "category": "门店信息"
+        }
+      ],
+      "persona": {
+        "name": "小助手小奶",
+        "description": "细心体贴的服务顾问，用心解决每一位顾客的需求，代表奶龙的雷霆品牌形象，服务业专业顾问。服务业",
+        "avatar": "🤖",
+        "generated": true
+      }
     }
   }
 }
