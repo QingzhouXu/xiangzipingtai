@@ -10,9 +10,11 @@ import base64
 import json
 import os
 import re
+import time as _time
 import uuid
 from functools import wraps
 from typing import Dict, Optional
+from urllib.request import Request as UrllibRequest, urlopen
 
 from flask import Flask, Response, jsonify, redirect, render_template, request, session, stream_with_context, url_for
 import datetime
@@ -161,7 +163,13 @@ class WebUI:
 
         @self.app.route("/")
         def index():
-            return render_template("client_home.html", merchants=self._visible_merchants())
+            merchants = self._visible_merchants()
+            # 计算所有分类及其商家数量
+            categories = {}
+            for m in merchants:
+                cat = m.get("category", "其他")
+                categories[cat] = categories.get(cat, 0) + 1
+            return render_template("client_home.html", merchants=merchants, categories=categories)
 
         @self.app.route("/profile")
         @self.login_required(["customer", "merchant", "super_admin"])
@@ -322,7 +330,8 @@ class WebUI:
         def chat_page():
             merchant_id = request.args.get("merchant", "tea_shop")
             merchant = self.dialogue_manager.knowledge_base.get_merchant(merchant_id)
-            return render_template("client_chat.html", merchant=merchant, merchants=self._visible_merchants())
+            knowledge = self.dialogue_manager.knowledge_base.get_knowledge(merchant_id) if merchant else []
+            return render_template("client_chat.html", merchant=merchant, merchants=self._visible_merchants(), knowledge=knowledge)
 
         @self.app.route("/admin")
         @self.login_required(["merchant", "super_admin"])
@@ -448,15 +457,31 @@ class WebUI:
 
         @self.app.route("/api/official-support/stream", methods=["POST"])
         def official_stream():
-            """官方客服流式响应。"""
+            """官方客服流式响应，同时保存消息到数据库。"""
             data = request.get_json(silent=True) or {}
             message = (data.get("message") or "").strip()
             if not message:
                 return jsonify({"error": "消息不能为空"}), 400
 
+            # 先保存用户消息
+            if "official_messages" not in self.auth.data:
+                self.auth.data["official_messages"] = []
+            current_user = self.current_user()
+            username = (current_user.get("display_name") or current_user.get("username", "访客用户")) if current_user else "访客用户"
+            user_msg = {
+                "id": str(len(self.auth.data["official_messages"]) + 1),
+                "type": "user",
+                "message": message,
+                "username": username,
+                "timestamp": datetime.datetime.now().isoformat(),
+                "status": "unread"
+            }
+            self.auth.data["official_messages"].append(user_msg)
+
             def event_stream():
+                full_response = ""
                 try:
-                    messages = [
+                    msgs = [
                         {"role": "system", "content": (
                             "你是AI智能客服平台的官方客服助手。你的职责是帮助用户了解和使用平台功能。"
                             "平台功能包括：\n"
@@ -469,12 +494,37 @@ class WebUI:
                         )},
                         {"role": "user", "content": message}
                     ]
-                    for chunk in self.dialogue_manager.llm_client.stream_chat(messages):
+                    for chunk in self.dialogue_manager.llm_client.stream_chat(msgs):
+                        full_response += chunk
                         yield self._sse("message", {"content": chunk})
                     yield self._sse("done", {"ok": True})
                 except Exception as exc:
                     yield self._sse("error", {"message": f"输出中断：{exc}"})
                     yield self._sse("done", {"ok": False})
+                finally:
+                    # 保存官方回复（无论成功失败都保存）
+                    if full_response:
+                        official_resp = {
+                            "id": str(len(self.auth.data["official_messages"]) + 1),
+                            "type": "official",
+                            "message": full_response,
+                            "timestamp": datetime.datetime.now().isoformat(),
+                            "status": "sent"
+                        }
+                        self.auth.data["official_messages"].append(official_resp)
+                        self.auth._save()
+                    elif message:
+                        # 流失败时生成关键词回复
+                        fallback = self._generate_official_response(message)
+                        official_resp = {
+                            "id": str(len(self.auth.data["official_messages"]) + 1),
+                            "type": "official",
+                            "message": fallback,
+                            "timestamp": datetime.datetime.now().isoformat(),
+                            "status": "sent"
+                        }
+                        self.auth.data["official_messages"].append(official_resp)
+                        self.auth._save()
 
             return Response(stream_with_context(event_stream()), mimetype="text/event-stream")
 
@@ -826,6 +876,78 @@ class WebUI:
             except Exception as exc:
                 return jsonify({"error": f"更新失败：{exc}"}), 500
 
+        @self.app.route("/api/merchant/import-data", methods=["POST"])
+        @self.login_required(["merchant", "super_admin"])
+        def import_merchant_data():
+            data = request.get_json(silent=True) or {}
+            merchant_id = self._merchant_scope(data.get("merchant_id") or "tea_shop")
+            raw_text = (data.get("raw_text") or "").strip()
+
+            if not raw_text:
+                return jsonify({"error": "资料不能为空"}), 400
+
+            try:
+                kb = self.dialogue_manager.knowledge_base
+                merchant = kb.get_merchant(merchant_id)
+                if not merchant:
+                    return jsonify({"error": "商户不存在"}), 404
+
+                # 存储原始导入资料
+                merchant["imported_data"] = raw_text
+
+                # 用 LLM 生成知识库条目
+                prompt = (
+                    f"你是一家店铺的 AI 知识库生成器。根据以下店铺资料，生成 4-8 条常见问题及回答。\n\n"
+                    f"店铺名称：{merchant['name']}\n"
+                    f"店铺类别：{merchant.get('category', '')}\n"
+                    f"店铺简介：{merchant.get('slogan', '')}\n\n"
+                    f"店铺详细资料：\n{raw_text}\n\n"
+                    "请返回一个 JSON 数组（只返回 JSON，不要其他文字），格式如下：\n"
+                    '[\n'
+                    '  {"question": "常见问题1", "answer": "对应的回答", "category": "分类名称"},\n'
+                    '  {"question": "常见问题2", "answer": "对应的回答", "category": "分类名称"}\n'
+                    "]\n"
+                    "要求：\n"
+                    "1. question 要简洁，像客户会问的自然语言（10-20字）\n"
+                    "2. answer 要完整、准确、包含具体信息（如价格、时间等）（30-80字）\n"
+                    "3. category 按内容分类，如：招牌推荐、门店信息、配送服务、会员服务、常见问题\n"
+                    "4. 生成的内容必须严格基于提供的资料，不要编造"
+                )
+
+                generated_items = []
+                try:
+                    ai_response = self.dialogue_manager.llm_client.generate(prompt)
+                    import re as _re
+                    json_match = _re.search(r'\[[\s\S]*\]', ai_response)
+                    if json_match:
+                        items = json.loads(json_match.group())
+                        if isinstance(items, list):
+                            for item in items:
+                                if item.get("question") and item.get("answer"):
+                                    q = item["question"].strip()
+                                    a = item["answer"].strip()
+                                    cat = item.get("category", "常见问题").strip()
+                                    entry = kb.add_knowledge(q, a, merchant_id=merchant_id, category=cat)
+                                    generated_items.append(entry)
+
+                    # 限制最多 8 条
+                    generated_items = generated_items[:8]
+
+                except Exception:
+                    pass
+
+                # 保存导入的原始资料（知识条目已由 add_knowledge 自动保存）
+                if not generated_items:
+                    kb.save_all(kb.merchants)
+
+                return jsonify({
+                    "success": True,
+                    "count": len(generated_items),
+                    "items": generated_items
+                })
+            except Exception as exc:
+                return jsonify({"error": f"导入失败：{exc}"}), 500
+
         @self.app.route("/api/merchant/visit", methods=["POST"])
         @self.login_required()
         def track_merchant_visit():
@@ -1019,6 +1141,81 @@ class WebUI:
             persona = merchant.get("persona")
             return jsonify({"persona": persona})
 
+        @self.app.route("/api/merchant/persona/generate-image", methods=["POST"])
+        @self.login_required(["merchant", "super_admin"])
+        def generate_merchant_persona_image():
+            data = request.get_json(silent=True) or {}
+            merchant_id = self._merchant_scope(data.get("merchant_id") or "tea_shop")
+            kb = self.dialogue_manager.knowledge_base
+            merchant = kb.get_merchant(merchant_id)
+            if not merchant:
+                return jsonify({"error": "商户不存在"}), 404
+
+            # 尝试用 DashScope 通义万相生成图片
+            api_key = os.getenv("DASHSCOPE_API_KEY", "")
+            if api_key:
+                try:
+                    prompt = (
+                        f"一个可爱的{merchant.get('category', '')}店铺AI客服角色头像，"
+                        f"店铺名称：{merchant['name']}，{merchant.get('slogan', '')}"
+                        f"卡通风格，温暖亲切，商业插画，干净背景，高清晰度"
+                    )
+
+                    # 提交任务
+                    body = json.dumps({
+                        "model": "wanx-v1",
+                        "input": {"prompt": prompt},
+                        "parameters": {"size": "512x512", "n": 1},
+                    }).encode("utf-8")
+                    task_req = UrllibRequest(
+                        "https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis",
+                        data=body,
+                        headers={
+                            "Authorization": f"Bearer {api_key}",
+                            "Content-Type": "application/json",
+                        },
+                    )
+                    with urlopen(task_req, timeout=30) as resp:
+                        task_data = json.loads(resp.read())
+                    task_id = task_data.get("output", {}).get("task_id", "")
+                    if not task_id:
+                        return jsonify({"error": "图片生成任务提交失败"}), 500
+
+                    # 轮询结果（最多等待 60 秒）
+                    for _ in range(30):
+                        _time.sleep(2)
+                        poll_req = UrllibRequest(
+                            f"https://dashscope.aliyuncs.com/api/v1/tasks/{task_id}",
+                            headers={"Authorization": f"Bearer {api_key}"},
+                        )
+                        with urlopen(poll_req, timeout=10) as resp:
+                            poll_data = json.loads(resp.read())
+                        status = poll_data.get("output", {}).get("task_status", "")
+                        if status == "SUCCEEDED":
+                            results = poll_data.get("output", {}).get("results", [])
+                            if results:
+                                image_url = results[0].get("url", "")
+                                if image_url:
+                                    # 下载图片并保存到本地
+                                    with urlopen(image_url, timeout=15) as img_resp:
+                                        img_data = img_resp.read()
+                                    ext = "png"
+                                    filename = f"{merchant_id}_persona.{ext}"
+                                    filepath = os.path.join(self.app.root_path, "static", "img", "shops", filename)
+                                    with open(filepath, "wb") as f:
+                                        f.write(img_data)
+                                    local_url = f"/static/img/shops/{filename}"
+                                    return jsonify({"success": True, "image_url": local_url})
+                            break
+                        elif status in ("FAILED", "STOPPED"):
+                            break
+
+                    return jsonify({"error": "图片生成超时或失败，请稍后重试或手动上传"}), 500
+                except Exception as exc:
+                    return jsonify({"error": f"图片生成失败：{exc}"}), 500
+            else:
+                return jsonify({"error": "未配置 AI 图片生成服务，请手动上传图片"}), 400
+
         @self.app.route("/api/merchant/persona/generate", methods=["POST"])
         @self.login_required(["merchant", "super_admin"])
         def generate_merchant_persona():
@@ -1030,17 +1227,23 @@ class WebUI:
                 return jsonify({"error": "商户不存在"}), 404
 
             try:
-                prompt = (
-                    f"你是一位品牌形象设计师。请为以下店铺设计一个 AI 客服角色。\n"
-                    f"店铺名称：{merchant['name']}\n"
-                    f"店铺类别：{merchant.get('category', '')}\n"
-                    f"店铺简介：{merchant.get('slogan', '')}\n\n"
+                prompt_parts = [
+                    "你是一位品牌形象设计师。请为以下店铺设计一个 AI 客服角色。\n",
+                    f"店铺名称：{merchant['name']}\n",
+                    f"店铺类别：{merchant.get('category', '')}\n",
+                    f"店铺简介：{merchant.get('slogan', '')}\n",
+                ]
+                imported = merchant.get("imported_data", "")
+                if imported:
+                    prompt_parts.append(f"店铺详细资料：\n{imported[:500]}\n")
+                prompt_parts.append(
                     "请返回一个 JSON 对象（只返回 JSON，不要其他文字），包含以下字段：\n"
                     '"name": AI 角色的名字（2-4个字，要有亲和力和品牌感，不要带引号）,\n'
                     '"description": AI 角色的性格描述（30-60字，包含说话风格和服务态度）,\n'
                     '"avatar": 一个 emoji 表情代表这个角色\n'
                     '例如：{"name":"咖啡师小星","description":"亲切专业的咖啡顾问，熟悉每款饮品的风味特点，善于根据顾客口味推荐。","avatar":"☕"}'
                 )
+                prompt = "".join(prompt_parts)
                 ai_response = self.dialogue_manager.llm_client.generate(prompt)
 
                 # Try to extract JSON from AI response

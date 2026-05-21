@@ -1714,9 +1714,23 @@ html.dark .theme-toggle-btn .moon-icon {
     align-items: center;
     justify-content: center;
     color: #fff;
+    overflow: hidden;
+}
+.chat-welcome .welcome-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 }
 .dark .chat-welcome .welcome-avatar {
     background: linear-gradient(135deg, var(--primary), var(--chart-3));
+}
+.bot-avatar img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
 }
 .chat-welcome h3 {
     margin: 0 0 6px;
@@ -2263,6 +2277,7 @@ html.dark .theme-toggle-btn .moon-icon {
 .auth-form input,
 .apply-card input,
 .apply-card textarea,
+.apply-card select,
 .merchant-panel input,
 .merchant-panel textarea,
 .settings-card input,
@@ -2273,6 +2288,15 @@ html.dark .theme-toggle-btn .moon-icon {
     padding: 12px;
     outline: none;
     background: var(--input);
+    color: var(--foreground);
+}
+.apply-card select {
+    appearance: auto;
+    cursor: pointer;
+    background-image: none;
+}
+.apply-card select option {
+    background: var(--card);
     color: var(--foreground);
 }
 .auth-links { display: flex; gap: 16px; margin-top: 18px; color: var(--orange); }
@@ -2448,6 +2472,66 @@ html.dark .theme-toggle-btn .moon-icon {
     color: var(--orange);
 }
 .muted-text { color: var(--muted-foreground); }
+.persona-image-upload {
+    width: 180px;
+    height: 180px;
+    display: grid;
+    place-items: center;
+    border: 2px dashed var(--border);
+    border-radius: 50%;
+    background: var(--input);
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+}
+.persona-image-upload:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+}
+.persona-image-preview {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+.persona-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+.persona-image-upload span,
+.persona-image-upload small {
+    display: block;
+    text-align: center;
+    z-index: 1;
+}
+.persona-image-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.persona-preview-image {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    overflow: hidden;
+}
+.persona-preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.persona-preview-image span {
+    font-size: 48px;
+}
 .message-toolbar {
     display: grid;
     grid-template-columns: auto auto 1fr auto;

@@ -51,8 +51,33 @@
             
             <div class="form-group">
                 <label>经营范围</label>
-                <input name="category" placeholder="请输入经营范围，如 餐饮饮品" required>
+                <select name="category" id="category-select" required>
+                    <option value="">请选择经营范围</option>
+                    <option value="餐饮">餐饮</option>
+                    <option value="咖啡">咖啡</option>
+                    <option value="茶饮">茶饮</option>
+                    <option value="甜品">甜品</option>
+                    <option value="生活服务">生活服务</option>
+                    <option value="__other__">其他（自行填写）</option>
+                </select>
+                <input name="category_other" id="category-other" style="display: none; margin-top: 8px;" placeholder="请输入经营范围">
             </div>
+            <script>
+                document.getElementById('category-select').addEventListener('change', function() {
+                    var otherInput = document.getElementById('category-other');
+                    if (this.value === '__other__') {
+                        otherInput.style.display = 'block';
+                        otherInput.required = true;
+                        otherInput.name = 'category';
+                        this.name = '';
+                    } else {
+                        otherInput.style.display = 'none';
+                        otherInput.required = false;
+                        otherInput.name = '';
+                        this.name = 'category';
+                    }
+                });
+            </script>
             
             <div class="form-group">
                 <label>联系方式</label>

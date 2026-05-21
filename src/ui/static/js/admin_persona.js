@@ -10,15 +10,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const personaName = document.querySelector('.persona-result h3');
     const personaDesc = document.querySelector('.persona-result p.muted-text');
 
+    // 形象图片相关元素
+    const personaImageUpload = document.getElementById('persona-image-upload');
+    const personaImageInput = document.getElementById('persona-image-input');
+    const personaImagePreview = document.getElementById('persona-image-preview');
+    const personaImagePlaceholder = document.getElementById('persona-image-placeholder');
+    const generateImageBtn = document.getElementById('generate-image-btn');
+    const imageStatus = document.getElementById('image-status');
+    const previewEmoji = document.getElementById('preview-emoji');
+    const previewImageContainer = document.getElementById('persona-preview-image');
+
     let currentPersona = {
         name: '',
         description: '',
         avatar: '🤖',
+        image: '',
         generated: false
     };
 
     init();
     initEventListeners();
+    initImageUpload();
 
     async function init() {
         try {
@@ -26,11 +38,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (data.persona && data.persona.name) {
                 currentPersona = { ...data.persona, generated: true };
-                updatePersonaPreview(currentPersona.name, currentPersona.description, true, currentPersona.avatar || '🤖');
+                updatePersonaPreview(currentPersona.name, currentPersona.description, true, currentPersona.avatar || '🤖', currentPersona.image || '');
             }
         } catch (e) {
             // No saved persona yet — that's fine
         }
+    }
+
+    function initImageUpload() {
+        if (!personaImageUpload || !personaImageInput) return;
+
+        personaImageUpload.addEventListener('click', () => {
+            personaImageInput.click();
+        });
+
+        personaImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const dataUrl = ev.target.result;
+
+                // 显示预览
+                personaImagePreview.innerHTML = `<img src="${dataUrl}" alt="形象图片">`;
+                personaImagePlaceholder.style.display = 'none';
+
+                // 保存到当前形象
+                currentPersona.image = dataUrl;
+                if (imageStatus) imageStatus.textContent = '✓ 已上传图片';
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     function initEventListeners() {
@@ -48,6 +87,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (savePersonaBtn) {
             savePersonaBtn.addEventListener('click', () => savePersona());
+        }
+
+        if (generateImageBtn) {
+            generateImageBtn.addEventListener('click', () => generatePersonaImage());
+        }
+    }
+
+    async function generatePersonaImage() {
+        if (generateImageBtn) {
+            generateImageBtn.disabled = true;
+            generateImageBtn.textContent = '生成中...';
+        }
+        if (imageStatus) imageStatus.textContent = 'AI 正在生成图片...';
+
+        try {
+            const response = await fetch('/api/merchant/persona/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ merchant_id: currentMerchantId })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.image_url) {
+                // 显示生成的图片
+                personaImagePreview.innerHTML = `<img src="${data.image_url}" alt="AI形象图片">`;
+                personaImagePlaceholder.style.display = 'none';
+
+                currentPersona.image = data.image_url;
+
+                // 同步更新预览
+                if (previewImageContainer) {
+                    previewImageContainer.innerHTML = `<img src="${data.image_url}" alt="预览">`;
+                    if (previewEmoji) previewEmoji.style.display = 'none';
+                }
+
+                if (imageStatus) imageStatus.textContent = '✓ 图片生成成功';
+            } else {
+                // 如果AI生成失败，提示手动上传
+                if (imageStatus) imageStatus.textContent = data.error || 'AI图片生成失败，请手动上传';
+            }
+        } catch (error) {
+            console.error('生成形象图片失败:', error);
+            if (imageStatus) imageStatus.textContent = '生成失败，请手动上传图片';
+        } finally {
+            if (generateImageBtn) {
+                generateImageBtn.disabled = false;
+                generateImageBtn.textContent = 'AI生成形象图片';
+            }
         }
     }
 
@@ -100,9 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     name: p.name,
                     description: p.description,
                     avatar: p.avatar || '🤖',
+                    image: currentPersona.image || p.image || '',
                     generated: true
                 };
-                updatePersonaPreview(p.name, p.description, true, p.avatar || '🤖');
+                updatePersonaPreview(p.name, p.description, true, p.avatar || '🤖', currentPersona.image);
                 showMessage(data.fallback ? 'AI形象生成成功（本地模板）' : 'AI形象生成成功', 'success');
             } else {
                 showMessage(data.error || '生成失败', 'error');
@@ -163,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function updatePersonaPreview(name, description, generated, avatar) {
+    function updatePersonaPreview(name, description, generated, avatar, image) {
         if (personaName) {
             personaName.textContent = `已生成形象：${name}`;
         }
@@ -173,10 +262,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (personaPreview) {
-            personaPreview.innerHTML = `
-                <div style="font-size: 48px; text-align: center; margin-bottom: 8px;">${avatar || '🤖'}</div>
-                <span>AI形象预览</span>
-            `;
+            if (image) {
+                personaPreview.innerHTML = `
+                    <div class="persona-preview-image">
+                        <img src="${image}" alt="AI形象预览">
+                    </div>
+                    <span>AI形象预览</span>
+                `;
+            } else {
+                personaPreview.innerHTML = `
+                    <div class="persona-preview-image">
+                        <span style="font-size: 48px;">${avatar || '🤖'}</span>
+                    </div>
+                    <span>AI形象预览</span>
+                `;
+            }
+        }
+
+        // 同步更新上传区域预览
+        if (image && personaImagePreview) {
+            personaImagePreview.innerHTML = `<img src="${image}" alt="形象图片">`;
+            if (personaImagePlaceholder) personaImagePlaceholder.style.display = 'none';
         }
 
         if (generated) {

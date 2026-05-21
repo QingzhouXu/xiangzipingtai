@@ -2,7 +2,7 @@
 <html lang="zh-CN" style="font-family: 'SimHei', '黑体', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;">
 <head>
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"){document.documentElement.classList.add("dark");}else if(t==="light"){document.documentElement.classList.remove("dark");}else if(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches){document.documentElement.classList.add("dark");}if(document.referrer&&document.referrer.indexOf(window.location.origin)===0){document.documentElement.classList.add("page-entering");}})();</script><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>AI形象生成</title><link rel="stylesheet" href="/static/css/style.css"></head>
-<body class="merchant-page">
+<body class="merchant-page" data-merchant-id="{{ merchant.id }}">
     {% include "partials/merchant_sidebar.html" %}
     <main class="merchant-main">
         <h1>AI形象生成</h1>
@@ -12,9 +12,32 @@
             <button class="soft-button">同步店铺信息</button>
             <button class="primary-action">一键生成AI形象</button>
         </section>
+        <section class="merchant-panel">
+            <h2>形象图片</h2>
+            <p class="muted-text">上传或生成 AI 角色头像图片，显示在客户咨询界面。</p>
+            <div class="upload-row">
+                <div class="persona-image-upload" id="persona-image-upload">
+                    <div class="persona-image-preview" id="persona-image-preview">
+                        <span id="persona-image-placeholder">🖼</span>
+                    </div>
+                    <span>上传形象图片</span>
+                    <small>建议 200×200px，支持 JPG/PNG</small>
+                </div>
+                <input type="file" id="persona-image-input" accept="image/jpeg,image/png" style="display: none;">
+                <div class="persona-image-actions">
+                    <button id="generate-image-btn" class="primary-action">AI生成形象图片</button>
+                    <span id="image-status" style="font-size: 13px; color: var(--muted); margin-left: 8px;"></span>
+                </div>
+            </div>
+        </section>
         <section class="merchant-panel persona-result">
             <h2>生成结果</h2>
-            <div class="persona-preview">▣<span>AI形象预览</span></div>
+            <div class="persona-preview">
+                <div class="persona-preview-image" id="persona-preview-image">
+                    <span id="preview-emoji">🤖</span>
+                </div>
+                <span>AI形象预览</span>
+            </div>
             <div>
                 <h3>已生成形象：咖啡师小美</h3>
                 <p class="muted-text">形象特征：亲切友好、专业服务，代表星巴克品牌形象，可在客服咨询中使用。</p>

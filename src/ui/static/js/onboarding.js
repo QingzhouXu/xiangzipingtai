@@ -52,15 +52,21 @@ function handleFileSelect(file, type) {
         const base64Data = e.target.result;
         
         if (type === 'avatar') {
-            // 显示头像预览
-            const avatarPreview = document.getElementById('avatar-preview');
-            avatarPreview.innerHTML = `<img src="${base64Data}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;">`;
-            avatarPreview.style.fontSize = '0';
-            
+            // 上传后让图片填满整个上传区域
+            const uploadDiv = document.getElementById('avatar-upload');
+            uploadDiv.style.display = 'flex';
+            uploadDiv.style.alignItems = 'center';
+            uploadDiv.style.justifyContent = 'center';
+            uploadDiv.style.width = '150px';
+            uploadDiv.style.height = '150px';
+            uploadDiv.style.borderRadius = '50%';
+            uploadDiv.style.overflow = 'hidden';
+            uploadDiv.innerHTML = `<img src="${base64Data}" style="width: 100%; height: 100%; object-fit: cover; display: block;">`;
+
             // 保存数据
             const avatarData = document.getElementById('avatar-data');
             avatarData.value = base64Data;
-            
+
             showMessage('头像上传成功', 'success');
         } else if (type === 'license') {
             // 显示文件名

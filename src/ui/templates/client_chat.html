@@ -64,7 +64,7 @@
     </style>
     <script src="/static/vendor/marked.min.js"></script>
 </head>
-<body class="client-page" data-merchant-id="{{ merchant.id }}">
+<body class="client-page" data-merchant-id="{{ merchant.id }}" data-persona-image="{{ merchant.persona.image if merchant.persona and merchant.persona.image else '' }}" data-persona-name="{{ merchant.persona.name if merchant.persona and merchant.persona.name else 'AI' }}" data-persona-emoji="{{ merchant.persona.avatar if merchant.persona and merchant.persona.avatar else '🤖' }}">
     <!-- 背景光晕 -->
     <div class="chat-glow-top"></div>
     <div class="chat-glow-bottom"></div>
@@ -190,6 +190,14 @@
             </div>
 
             <div class="quick-replies" id="quick-replies">
+                {% if knowledge %}
+                {% for item in knowledge[:6] %}
+                <button class="quick-reply-btn" data-message="{{ item.question }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {{ item.question[:12] }}{{ '…' if item.question|length > 12 }}
+                </button>
+                {% endfor %}
+                {% else %}
                 <button class="quick-reply-btn" data-message="营业时间是什么？">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     营业时间
@@ -206,6 +214,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                     配送服务
                 </button>
+                {% endif %}
             </div>
 
             <div class="chat-input-row">

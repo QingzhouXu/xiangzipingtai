@@ -84,6 +84,68 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ── 资料导入功能 ──
+    const importBtn = document.getElementById('import-btn');
+    const importText = document.getElementById('import-text');
+    const importStatus = document.getElementById('import-status');
+    const importResult = document.getElementById('import-result');
+    const importList = document.getElementById('import-knowledge-list');
+
+    if (importBtn && importText) {
+        importBtn.addEventListener('click', async () => {
+            const text = importText.value.trim();
+            if (!text) {
+                showMessage('请先输入店铺资料', 'error');
+                return;
+            }
+
+            importBtn.disabled = true;
+            importBtn.textContent = '正在生成知识库...';
+            importStatus.textContent = 'AI 正在分析资料...';
+
+            try {
+                const response = await fetch('/api/merchant/import-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        merchant_id: currentMerchantId,
+                        raw_text: text
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('知识库生成成功！', 'success');
+                    importStatus.textContent = `导入完成，生成 ${data.count} 条知识`;
+
+                    // 显示生成结果
+                    importResult.style.display = 'block';
+                    importList.innerHTML = '';
+                    data.items.forEach((item) => {
+                        const li = document.createElement('li');
+                        li.style.cssText = 'padding: 8px 12px; margin: 4px 0; background: var(--surface); border-radius: 6px; border-left: 3px solid var(--primary);';
+                        li.innerHTML = `
+                            <strong style="font-size: 13px;">${item.question}</strong>
+                            <p style="margin: 4px 0 0; font-size: 12px; color: var(--muted);">${item.answer}</p>
+                        `;
+                        importList.appendChild(li);
+                    });
+                } else {
+                    showMessage(data.error || '导入失败', 'error');
+                    importStatus.textContent = '导入失败，请重试';
+                }
+            } catch (error) {
+                console.error('导入失败:', error);
+                showMessage('网络错误，请稍后重试', 'error');
+                importStatus.textContent = '网络错误';
+            } finally {
+                importBtn.disabled = false;
+                importBtn.textContent = '导入并生成知识库';
+            }
+        });
+    }
+
     // 保存按钮功能
     if (saveButton) {
         saveButton.addEventListener('click', async () => {

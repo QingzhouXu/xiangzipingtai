@@ -43,6 +43,24 @@
                 <input id="store-address" value="{{ merchant.address }}" placeholder="例如：北京市海淀区中关村大街1号">
             </div>
         </section>
+
+        <section class="merchant-panel">
+            <h2>资料导入</h2>
+            <p class="muted-text">粘贴您的店铺详细介绍（菜单、服务、特色、价格等），系统将自动生成 AI 知识库和客服形象。</p>
+            <div class="form-group">
+                <label for="import-text">店铺详细资料</label>
+                <textarea id="import-text" rows="8" placeholder="例如：&#10;本店主打精品咖啡和轻食甜点，招牌产品有焦糖玛奇朵（大杯32元/中杯28元）、拿铁、抹茶星冰乐。&#10;营业时间每天08:00-22:00，3公里内可外送，配送费5元起，满50元免配送费。&#10;会员权益：积分累计、生日赠饮、每周三会员日第二杯半价。&#10;本店特色：每月推出限定季节饮品，提供免费WiFi，有阅读区和户外座位。"></textarea>
+            </div>
+            <div class="form-actions">
+                <button id="import-btn" class="primary-action">导入并生成知识库</button>
+                <span id="import-status" style="margin-left: 12px; font-size: 13px; color: var(--muted);"></span>
+            </div>
+            <div id="import-result" style="margin-top: 12px; display: none;">
+                <h3>生成结果</h3>
+                <ul id="import-knowledge-list" style="list-style: none; padding: 0;"></ul>
+            </div>
+        </section>
+
         <div class="form-actions"><button class="soft-button">撤销修改</button><button class="primary-action">保存修改</button></div>
     </main>
 <script src="/static/js/admin_store.js"></script>

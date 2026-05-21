@@ -9,6 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const backendSwitchBtn = document.getElementById('backend-switch-btn');
     const backendDropdown = document.getElementById('backend-dropdown');
 
+    // 形象数据（从 HTML data attributes 读取）
+    const personaImage = document.body.dataset.personaImage || '';
+    const personaName = document.body.dataset.personaName || 'AI';
+    const personaEmoji = document.body.dataset.personaEmoji || '🤖';
+
     startHeartbeat();
 
     // Backend switch dropdown toggle
@@ -107,11 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function addWelcomeCard() {
+        var avatarHtml = personaImage
+            ? '<div class="welcome-avatar"><img src="' + personaImage + '" alt="' + personaName + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;"></div>'
+            : '<div class="welcome-avatar">' + personaEmoji + '</div>';
         chatContainer.innerHTML = `
             <div class="chat-welcome">
-                <div class="welcome-avatar">🤖</div>
-                <h3>您好！欢迎光临</h3>
-                <p>我是您的 AI 客服助手，有什么可以帮助您的？</p>
+                ${avatarHtml}
+                <h3>您好！欢迎来到</h3>
+                <p>我是 ${personaName}，您的 AI 客服助手，有什么可以帮助您的？</p>
             </div>
         `;
     }
@@ -273,10 +281,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function botAvatarHtml() {
+        if (personaImage) {
+            return '<div class="avatar bot-avatar"><img src="' + personaImage + '" alt="' + personaName + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"></div>';
+        }
+        return '<div class="avatar bot-avatar">' + personaEmoji + '</div>';
+    }
+
     function showTypingIndicator() {
         var el = document.createElement('div');
         el.className = 'message bot-message typing-message';
-        el.innerHTML = '<div class="avatar bot-avatar">AI</div><div class="message-content"><div class="message-text typing-indicator"><span class="shining-text">AI is Thinking...</span></div></div>';
+        el.innerHTML = botAvatarHtml() + '<div class="message-content"><div class="message-text typing-indicator"><span class="shining-text">' + personaName + ' is Thinking...</span></div></div>';
         chatContainer.appendChild(el);
         scrollToBottom();
         return el;
@@ -294,7 +309,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         var avatarDiv = document.createElement('div');
         avatarDiv.className = 'avatar ' + (isUser ? 'user-avatar' : 'bot-avatar');
-        avatarDiv.textContent = isUser ? 'U' : 'AI';
+        if (isUser) {
+            avatarDiv.textContent = 'U';
+        } else if (personaImage) {
+            avatarDiv.innerHTML = '<img src="' + personaImage + '" alt="' + personaName + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">';
+        } else {
+            avatarDiv.textContent = personaEmoji;
+        }
 
         var contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
