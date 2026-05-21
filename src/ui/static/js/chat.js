@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const personaName = document.body.dataset.personaName || 'AI';
     const personaEmoji = document.body.dataset.personaEmoji || '🤖';
 
+    // 当前用户（用于隔离 localStorage）
+    var currentUser = window.__currentUser || 'anonymous';
+
+    function getStorageKey() {
+        return 'chat_history_' + (window.__currentUser || 'anonymous');
+    }
+
     startHeartbeat();
 
     // Backend switch dropdown toggle
@@ -103,9 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         // Clear localStorage history for this merchant
         try {
-            var historyData = JSON.parse(localStorage.getItem('chat_history') || '{}');
+            var historyData = JSON.parse(localStorage.getItem(getStorageKey()) || '{}');
             delete historyData[merchantId];
-            localStorage.setItem('chat_history', JSON.stringify(historyData));
+            localStorage.setItem(getStorageKey(), JSON.stringify(historyData));
         } catch (e) {}
         chatContainer.innerHTML = '';
         addWelcomeCard();
@@ -126,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadChatHistory(merchantId) {
         try {
-            var historyData = JSON.parse(localStorage.getItem('chat_history') || '{}');
+            var historyData = JSON.parse(localStorage.getItem(getStorageKey()) || '{}');
             var merchantHistory = historyData[merchantId];
             if (!merchantHistory || merchantHistory.length === 0) return;
 
@@ -258,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function saveToHistory(merchantId, userMessage, assistantReply) {
         try {
-            var historyData = JSON.parse(localStorage.getItem('chat_history') || '{}');
+            var historyData = JSON.parse(localStorage.getItem(getStorageKey()) || '{}');
             var merchantHistory = historyData[merchantId] || [];
             merchantHistory.push({
                 role: 'user',
@@ -275,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 merchantHistory = merchantHistory.slice(-200);
             }
             historyData[merchantId] = merchantHistory;
-            localStorage.setItem('chat_history', JSON.stringify(historyData));
+            localStorage.setItem(getStorageKey(), JSON.stringify(historyData));
         } catch (e) {
             // localStorage full or unavailable - silently ignore
         }
