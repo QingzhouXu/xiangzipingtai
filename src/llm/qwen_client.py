@@ -46,7 +46,7 @@ class QwenOllamaClient(BaseLLMClient):
             "top_p": 0.9,
             "num_predict": 2048,
             "keep_alive": "1h",
-            "timeout": 240,
+            "timeout": 180,
         }
         if config:
             self.config.update(config)

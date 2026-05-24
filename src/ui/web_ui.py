@@ -17,6 +17,7 @@ from typing import Dict, Optional
 from urllib.request import Request as UrllibRequest, urlopen
 
 from flask import Flask, Response, jsonify, redirect, render_template, request, session, stream_with_context, url_for
+from llm.qwen_client import QwenCloudClient
 import datetime
 
 
@@ -730,12 +731,12 @@ class WebUI:
                             lambda: list(self.dialogue_manager.stream_input(message, merchant_id=merchant_id))
                         )
                         try:
-                            chunks = future.result(timeout=60)
+                            chunks = future.result(timeout=180)
                             for chunk in chunks:
                                 yield self._sse("message", {"content": chunk})
                             yield self._sse("done", {"ok": True})
                         except concurrent.futures.TimeoutError:
-                            yield self._sse("error", {"message": "模型响应超时(60s)，请确认Ollama服务是否正常运行，或切换到演示模式后重试。"})
+                            yield self._sse("error", {"message": "模型响应超时(180s)，请确认Ollama服务是否正常运行，或切换到演示模式后重试。"})
                             yield self._sse("done", {"ok": False})
                 except Exception as exc:
                     yield self._sse("error", {"message": f"输出中断：{exc}"})
@@ -916,7 +917,7 @@ class WebUI:
 
                 generated_items = []
                 try:
-                    ai_response = self.dialogue_manager.llm_client.generate(prompt)
+                    ai_response = self._cloud_llm.generate(prompt)
                     import re as _re
                     json_match = _re.search(r'\[[\s\S]*\]', ai_response)
                     if json_match:
@@ -1244,7 +1245,7 @@ class WebUI:
                     '例如：{"name":"咖啡师小星","description":"亲切专业的咖啡顾问，熟悉每款饮品的风味特点，善于根据顾客口味推荐。","avatar":"☕"}'
                 )
                 prompt = "".join(prompt_parts)
-                ai_response = self.dialogue_manager.llm_client.generate(prompt)
+                ai_response = self._cloud_llm.generate(prompt)
 
                 # Try to extract JSON from AI response
                 import re as _re
@@ -1425,6 +1426,13 @@ class WebUI:
             return user.get("merchant_id", merchant_id)
         return merchant_id
 
+    @property
+    def _cloud_llm(self):
+        """始终返回云端 DashScope 客户端，不受 LLM_BACKEND 环境影响。"""
+        if not hasattr(self, "_cloud_llm_cache"):
+            self._cloud_llm_cache = QwenCloudClient()
+        return self._cloud_llm_cache
+
     def _ensure_merchant_stats(self, merchant_id: str) -> Dict:
         """Ensure merchant stats exist and return them."""
         if "merchant_stats" not in self.auth.data:
@@ -1462,7 +1470,7 @@ class WebUI:
             "rating": "4.8",
             "hours": "09:00 - 21:00",
             "address": "待完善",
-            "cover": "/static/img/shops/cafe.svg",
+            "cover": "/static/img/shops/coffee_shop.png",
             "avatar": "/static/img/shops/avatar-store.svg",
             "accent": "#ff5a00",
             "knowledge": [

@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const storeCategoryInput = document.getElementById('store-category');
     const storeHoursInput = document.getElementById('store-hours');
     const storeAddressInput = document.getElementById('store-address');
-    const resetButton = document.querySelector('.form-actions .soft-button');
-    const saveButton = document.querySelector('.form-actions .primary-action');
+    const resetButton = document.getElementById('reset-btn');
+    const saveButton = document.getElementById('save-btn');
 
     // 图片上传元素
     const coverUpload = document.querySelector('.upload-box');

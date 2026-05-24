@@ -141,7 +141,7 @@
                 {% for item in merchants %}
                 <article class="shop-card-horizontal">
                     <div class="shop-cover-horizontal">
-                        <img src="{{ item.cover }}" alt="{{ item.name }}" class="shop-cover-img">
+                        <img src="{{ item.cover }}" alt="{{ item.name }}" class="shop-cover-img" onerror="this.src='/static/img/shops/coffee_shop.png'">
                     </div>
                     <div class="shop-card-body-horizontal">
                         <div class="shop-info">

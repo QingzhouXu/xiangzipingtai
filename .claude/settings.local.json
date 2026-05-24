@@ -29,7 +29,9 @@
       "Bash(curl -s http://127.0.0.1:5000/static/css/style.css)",
       "Bash(curl -s http://127.0.0.1:5000/static/js/official_support.js)",
       "Bash(curl -s http://127.0.0.1:5000/official-support)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5000/)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5000/)",
+      "Bash(curl -v --connect-timeout 10 \"https://dashscope.aliyuncs.com/compatible-mode/v1/models\" -H \"Authorization: Bearer sk-e6e739fcc8e247ecb467e9283338be80\")",
+      "Bash(python -c ' *)"
     ]
   }
 }
